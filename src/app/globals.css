@@ -9,16 +9,21 @@
 
   --color-grass-200: #b9d97a;
   --color-grass-500: #5f9e3a;
+  --color-grass-700: #1e6f50;
   --color-grass-800: #2f5a24;
+  --color-grass-900: #134c4c;
   --color-dirt-300: #d2a36c;
   --color-dirt-600: #8a5a33;
   --color-parchment-50: #fbf3df;
-  --color-parchment-100: #f3e3bd;
-  --color-parchment-300: #e0c58f;
-  --color-ink-700: #4a3524;
+  --color-parchment-100: #ffe3c6;
+  --color-parchment-200: #ffd7a8;
+  --color-parchment-300: #e5b67f;
+  --color-ink-500: #825f60;
+  --color-ink-700: #493333;
   --color-ink-900: #2b1d12;
   --color-gold-400: #f4c542;
   --color-gold-600: #c98f1c;
+  --color-cover-500: #b75b5f;
   --color-ice-300: #9fd8f0;
   --color-ice-600: #3a8bbd;
   --color-danger-500: #c8443a;
@@ -29,9 +34,17 @@
 }
 
 :root {
-  --background: var(--color-grass-800);
+  /* Tamanho de um pixel dos sprites na tela: escala inteira para manter a pixel art nítida. */
+  --px: 2px;
+  --background: var(--color-grass-700);
   --foreground: var(--color-parchment-50);
   color-scheme: light;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --px: 3px;
+  }
 }
 
 html {
@@ -44,6 +57,8 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   overflow-x: hidden;
+  /* Toda a arte do jogo é pixel art; texto não é afetado. */
+  image-rendering: pixelated;
 }
 
 img,
@@ -52,7 +67,147 @@ canvas {
   max-width: 100%;
 }
 
+/* Anel duplo (escuro + dourado): visível tanto sobre o papel claro quanto sobre a grama. */
+:where(a, button, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-gold-400);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px var(--color-ink-900);
+}
+
 /* Mantém a pixel art nítida ao escalar sprites em HTML/CSS. */
 @utility pixelated {
   image-rendering: pixelated;
+}
+
+/* Contorno escuro de 1 pixel de sprite para títulos sobre o cenário. */
+@utility text-outline {
+  text-shadow:
+    calc(-1 * var(--px)) 0 0 var(--color-ink-900),
+    var(--px) 0 0 var(--color-ink-900),
+    0 calc(-1 * var(--px)) 0 var(--color-ink-900),
+    0 var(--px) 0 var(--color-ink-900),
+    var(--px) calc(2 * var(--px)) 0 var(--color-ink-900);
+}
+
+@layer components {
+  /* Moldura 9-slice; fonte, fatia e largura vêm de `UI_PANEL_SKINS` via estilo inline. */
+  .pixel-panel {
+    border-style: solid;
+    border-color: transparent;
+  }
+
+  /*
+   * Botão com os quadros do `Button01a`. As URLs chegam por variáveis
+   * (--btn-idle, --btn-raised, --btn-pressed) definidas em `PixelButton`.
+   */
+  .pixel-button {
+    --btn-shift: 0px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--spacing-touch);
+    min-height: var(--spacing-touch);
+    border-style: solid;
+    border-color: transparent;
+    border-image-source: var(--btn-idle);
+    border-image-repeat: stretch;
+    color: var(--color-parchment-100);
+    font-weight: 600;
+    line-height: 1.1;
+    text-decoration: none;
+    text-shadow: 0 2px 0 var(--color-ink-900);
+    cursor: pointer;
+    user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .pixel-button__content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(3 * var(--px));
+    transform: translateY(var(--btn-shift));
+  }
+
+  @media (hover: hover) {
+    .pixel-button:hover:not(:disabled, [aria-disabled="true"]) {
+      --btn-shift: calc(-1 * var(--px));
+      border-image-source: var(--btn-raised);
+      color: var(--color-parchment-50);
+    }
+  }
+
+  .pixel-button:active:not(:disabled, [aria-disabled="true"]) {
+    --btn-shift: var(--px);
+    border-image-source: var(--btn-pressed);
+  }
+
+  .pixel-button:disabled,
+  .pixel-button[aria-disabled="true"] {
+    --btn-shift: var(--px);
+    border-image-source: var(--btn-pressed);
+    color: var(--color-parchment-300);
+    cursor: not-allowed;
+    filter: grayscale(0.7);
+    opacity: 0.6;
+  }
+
+  /* Sprite (ou quadro de spritesheet horizontal) desenhado como fundo, em escala inteira. */
+  .pixel-sprite {
+    display: block;
+    width: calc(var(--frame-w) * var(--px));
+    height: calc(var(--frame-h) * var(--px));
+    background-image: var(--sheet);
+    background-repeat: no-repeat;
+    background-size: calc(var(--sheet-w) * var(--px)) calc(var(--frame-h) * var(--px));
+  }
+
+  .pixel-sprite[data-animated] {
+    animation: sprite-frames var(--frame-duration) steps(var(--frames)) infinite;
+  }
+
+  /* Inimigos decorativos do menu atravessando o cenário até o castelo. */
+  .menu-walker {
+    animation: menu-walk var(--walk-duration) linear var(--walk-delay) infinite both;
+  }
+}
+
+@keyframes sprite-frames {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: calc(-1 * var(--sheet-w) * var(--px)) 0;
+  }
+}
+
+@keyframes menu-walk {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  6%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(var(--walk-distance) * var(--px)));
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-sprite[data-animated] {
+    animation: none;
+  }
+
+  .menu-walker {
+    animation: none;
+    transform: translateX(calc(var(--walk-rest) * var(--px)));
+  }
+}
+
+dialog::backdrop {
+  background: rgb(19 19 19 / 0.65);
 }

@@ -26,9 +26,13 @@ Nenhuma chave de API, backend ou login é necessário.
 
 ## Estrutura
 
-- `src/app/` — rotas e layout (fonte Fredoka via `next/font/google`, tokens em `globals.css`).
-- `src/lib/assets.ts` — caminhos tipados dos sprites principais.
-- `src/game/` — simulação em TypeScript puro (constantes do mundo em `config/constants.ts`).
+- `src/app/` — rotas (`/` menu, `/play` partida, `/creditos`) e layout (fonte Fredoka via
+  `next/font/google`, tokens e escala de pixel `--px` em `globals.css`).
+- `src/components/ui/` — design system em pixel art: `PixelButton`, `PixelPanel`, `PixelIcon`, `PixelSprite`.
+- `src/components/menu/` — cenário animado do menu e diálogo "Como jogar".
+- `src/lib/assets.ts` — caminhos tipados dos sprites, ícones e molduras 9-slice da UI.
+- `src/lib/spriteManifest.ts` — leitura tipada do manifesto de sprites de gameplay.
+- `src/game/` — simulação em TypeScript puro (`config/constants.ts` e `config/balance.ts`).
 
 ## Assets
 

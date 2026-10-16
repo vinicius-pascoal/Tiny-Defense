@@ -2,7 +2,7 @@
 
 > **Documento de execução para um agente de programação (Codex ou equivalente).**
 >
-> **Status:** Etapa 01 concluída; próxima: Etapa 02.
+> **Status:** Etapas 01–02 concluídas; próxima: Etapa 03.
 > **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + React + Canvas 2D.
 > **Fonte:** [Fredoka — Google Fonts](https://fonts.google.com/specimen/Fredoka), via `next/font/google`.
 > **Plataformas:** navegador desktop e mobile, com interação por mouse, toque e teclado onde fizer sentido.
@@ -582,24 +582,72 @@ PRÓXIMA ETAPA:
 
 **Tarefas**
 
-- [ ] Criar componentes reutilizáveis `PixelButton`, `PixelPanel` e `PixelIcon` com assets TravelBook.
-- [ ] Configurar estados visualmente distintos de botão: padrão, foco, pressionado e desativado.
-- [ ] Criar tela inicial (`/`) com título **Tiny Defense**, subtítulo curto, cenário decorativo com sprites reais e botões **Jogar**, **Como jogar** e **Créditos**.
-- [ ] Criar diálogo/instruções explicando: inimigos, moedas, construção, upgrades, venda, ondas e vidas.
-- [ ] Criar tela de créditos com atribuição da UI e aviso de licença pendente do gameplay quando pertinente.
-- [ ] Configurar navegação `Jogar → /play` e retorno ao menu.
-- [ ] Manter espaçamentos, tipografia e escala consistentes em mobile/desktop.
-- [ ] Usar tags semânticas e controles acessíveis (`button`, foco visível e descrições quando necessárias).
+- [x] Criar componentes reutilizáveis `PixelButton`, `PixelPanel` e `PixelIcon` com assets TravelBook.
+- [x] Configurar estados visualmente distintos de botão: padrão, foco, pressionado e desativado.
+- [x] Criar tela inicial (`/`) com título **Tiny Defense**, subtítulo curto, cenário decorativo com sprites reais e botões **Jogar**, **Como jogar** e **Créditos**.
+- [x] Criar diálogo/instruções explicando: inimigos, moedas, construção, upgrades, venda, ondas e vidas.
+- [x] Criar tela de créditos com atribuição da UI e aviso de licença pendente do gameplay quando pertinente.
+- [x] Configurar navegação `Jogar → /play` e retorno ao menu.
+- [x] Manter espaçamentos, tipografia e escala consistentes em mobile/desktop.
+- [x] Usar tags semânticas e controles acessíveis (`button`, foco visível e descrições quando necessárias).
 
 **Aceite**
 
-- [ ] Todas as ações do menu funcionam de verdade.
-- [ ] Não há botões decorativos sem ação, imagens quebradas nem áreas de interface sobrepostas.
-- [ ] Em `390×844` e `1366×768`, o menu é legível e navegável.
-- [ ] Os créditos existem e apontam para a origem da UI.
-- [ ] Build e lint passam.
+- [x] Todas as ações do menu funcionam de verdade.
+- [x] Não há botões decorativos sem ação, imagens quebradas nem áreas de interface sobrepostas.
+- [x] Em `390×844` e `1366×768`, o menu é legível e navegável.
+- [x] Os créditos existem e apontam para a origem da UI.
+- [x] Build e lint passam.
 
 **Dependência:** Etapa 01.
+
+```text
+ETAPA CONCLUÍDA: 02 — Design system, menu inicial e navegação
+IMPLEMENTADO:
+- Escala de pixel global `--px` (2 px no mobile, 3 px a partir de 640 px): todos os sprites e molduras
+  usam múltiplos inteiros, sem distorção.
+- `PixelPanel`: molduras 9-slice via `border-image` com os sprites reais — `paper` (Popup01a),
+  `cover` (BookCover01a), `header` (Frame01a) e `slot` (Slot01a); fatias centralizadas em `UI_PANEL_SKINS`.
+- `PixelButton` (`<button>` ou `Link` com `href`): quadros do `Button01a` — 1 = padrão, 5 = hover
+  (só em dispositivos com hover), 3 = pressionado; desativado esmaecido; foco com anel duplo
+  escuro+dourado (contraste sobre papel e grama); área mínima de 44×44 px; quadros pré-carregados.
+- `PixelIcon` (ícones TravelBook com tamanho nativo em `UI_ICONS`) e `PixelSprite` (sprites e
+  spritesheets do manifesto, animação por `steps()` respeitando `prefers-reduced-motion`).
+- Menu `/`: título, subtítulo, cenário com grama, árvores, pedras, cogumelo, torres Archer/Ice Wizard,
+  castelo verde animado e slimes/goblin/esqueleto caminhando até o castelo; botões Jogar, Como jogar
+  e Créditos.
+- Diálogo "Como jogar" (`<dialog>` nativo modal): inimigos, vidas, moedas, construção, melhorias,
+  venda e ondas, com ilustrações em sprites reais; números lidos de `game/config/balance.ts`;
+  fecha por botão, "Entendi", Esc ou clique no fundo; foco volta ao botão de origem.
+- `/creditos`: atribuição da UI (Crusenho Agus Hennihuno, link da página do pacote e do autor),
+  aviso de licença pendente do pacote de gameplay, Fredoka (SIL OFL) e tecnologias.
+- `/play`: destino real do "Jogar" com retorno ao menu (a cena de jogo é da Etapa 03).
+ARQUIVOS PRINCIPAIS:
+- src/components/ui/PixelButton.tsx, PixelPanel.tsx, PixelIcon.tsx, PixelSprite.tsx
+- src/components/layout/ScreenShell.tsx
+- src/components/menu/MenuScene.tsx, HowToPlayDialog.tsx
+- src/app/page.tsx, src/app/creditos/page.tsx, src/app/play/page.tsx, src/app/globals.css
+- src/lib/assets.ts, src/lib/spriteManifest.ts, src/lib/cn.ts, src/game/config/balance.ts
+VALIDAÇÃO:
+- npm run lint: ok. npm run build: ok (/, /creditos, /play estáticos). npm run typecheck: ok.
+- Chrome headless (via DevTools Protocol) em 390×844, 768×1024 e 1366×768, contra `next start`:
+  sem overflow horizontal, sem imagens quebradas, sem erros de console nem respostas HTTP ≥ 400,
+  todos os botões ≥ 44×44 px, Fredoka carregada; navegação por toque/clique
+  `/ → /play → / → /creditos → /`; diálogo cabe na viewport, recebe o foco e fecha com Esc.
+- Teclado: ordem Jogar → Como jogar → Créditos; Enter abre o diálogo e navega para /play;
+  foco preso no modal; Esc devolve o foco ao botão.
+- `prefers-reduced-motion: reduce` desliga todas as animações do cenário.
+- Capturas conferidas visualmente (menu, diálogo, créditos, /play e os quatro estados do botão).
+PENDÊNCIAS / RISCOS:
+- Links de texto dentro de frases nos créditos têm ~20 px de altura (exceção de links inline;
+  botões cumprem 44 px).
+- `src/lib/spriteManifest.ts` antecipa uma leitura mínima e tipada do manifesto (necessária para recortar
+  os sprites do menu); a Etapa 04 deve estendê-la em vez de criar outra.
+- `/play` ainda é uma tela provisória com retorno ao menu, até a Etapa 03.
+- Licença do pacote Simple Tower Defense continua pendente (aviso exibido nos créditos).
+PRÓXIMA ETAPA:
+- Etapa 03 — Cena de jogo, HUD e layout responsivo.
+```
 
 ---
 
@@ -1040,7 +1088,7 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | Etapa | Status | Observações |
 | --- | --- | --- |
 | 01 — Fundação | Concluída | `src/` + alias, Fredoka, tokens, `lib/assets.ts`; lint/build/typecheck ok |
-| 02 — Design system e menu | Pendente | — |
+| 02 — Design system e menu | Concluída | Pixel UI 9-slice, menu com cenário animado, Como jogar, /creditos, /play provisório |
 | 03 — HUD responsivo | Pendente | — |
 | 04 — Canvas e mapa | Pendente | — |
 | 05 — Engine e movimento | Pendente | — |
@@ -1051,5 +1099,5 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 10 — Mobile e controles | Pendente | — |
 | 11 — Persistência e entrega | Pendente | — |
 
-**Ponto de retomada atual:** Etapa 02 — Design system, menu inicial e navegação.
+**Ponto de retomada atual:** Etapa 03 — Cena de jogo, HUD e layout responsivo.
 
