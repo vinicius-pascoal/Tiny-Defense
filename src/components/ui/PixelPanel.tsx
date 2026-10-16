@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties } from "react";
 import { UI_PANEL_SKINS, type UiPanelSkin } from "@/lib/assets";
 import { cn } from "@/lib/cn";
 
@@ -16,6 +16,19 @@ const SKIN_TEXT: Record<UiPanelSkin, string> = {
   slot: "text-parchment-100",
 };
 
+/**
+ * Estilo da moldura 9-slice de uma skin. Use com a classe `pixel-panel` em elementos
+ * que o `PixelPanel` não cobre, como `<button>`.
+ */
+export function pixelPanelStyle(skin: UiPanelSkin): CSSProperties {
+  const { src, slice } = UI_PANEL_SKINS[skin];
+
+  return {
+    borderWidth: `calc(${slice} * var(--px))`,
+    borderImage: `url(${src}) ${slice} fill / calc(${slice} * var(--px)) stretch`,
+  };
+}
+
 /** Painel em pixel art com moldura 9-slice dos sprites TravelBook. */
 export function PixelPanel({
   as: Element = "div",
@@ -25,17 +38,11 @@ export function PixelPanel({
   children,
   ...rest
 }: PixelPanelProps) {
-  const { src, slice } = UI_PANEL_SKINS[skin];
-
   return (
     <Element
       {...rest}
       className={cn("pixel-panel", SKIN_TEXT[skin], className)}
-      style={{
-        borderWidth: `calc(${slice} * var(--px))`,
-        borderImage: `url(${src}) ${slice} fill / calc(${slice} * var(--px)) stretch`,
-        ...style,
-      }}
+      style={{ ...pixelPanelStyle(skin), ...style }}
     >
       {children}
     </Element>

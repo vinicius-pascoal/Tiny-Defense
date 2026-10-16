@@ -55,7 +55,21 @@ export const UI_SPRITES = {
   frame: `${UI}/UI_TravelBook_Frame01a.png`,
   slot: `${UI}/UI_TravelBook_Slot01a.png`,
   bar: `${UI}/UI_TravelBook_Bar01a.png`,
+  fill: `${UI}/UI_TravelBook_Fill01a.png`,
 } as const;
+
+/**
+ * Sprites essenciais da cena de partida, carregados antes de exibir o mapa.
+ * Ícones e molduras da interface HTML não entram aqui: são servidos pelo próprio `<img>`/CSS.
+ */
+export const GAME_SCENE_SPRITES: readonly string[] = [
+  ...Object.values(TOWER_SPRITES),
+  ...Object.values(PROJECTILE_SPRITES),
+  ...Object.values(ENEMY_SPRITES),
+  ...Object.values(BUILDING_SPRITES),
+  ...Object.values(TILESET_SPRITES),
+  ...Object.values(GRASS_SPRITES),
+];
 
 /** Ícones do TravelBook com o tamanho nativo em pixels, para escalar sem distorcer. */
 export const UI_ICONS = {

@@ -2,7 +2,7 @@
 
 > **Documento de execução para um agente de programação (Codex ou equivalente).**
 >
-> **Status:** Etapas 01–02 concluídas; próxima: Etapa 03.
+> **Status:** Etapas 01–03 concluídas; próxima: Etapa 04.
 > **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + React + Canvas 2D.
 > **Fonte:** [Fredoka — Google Fonts](https://fonts.google.com/specimen/Fredoka), via `next/font/google`.
 > **Plataformas:** navegador desktop e mobile, com interação por mouse, toque e teclado onde fizer sentido.
@@ -657,25 +657,81 @@ PRÓXIMA ETAPA:
 
 **Tarefas**
 
-- [ ] Criar `/play` com shell de jogo e área central de Canvas.
-- [ ] Criar `GameHUD` com vidas, moedas, onda atual/total e indicadores visuais usando sprites reais.
-- [ ] Criar `TowerSelector` mostrando Archer, Cannon e Ice Wizard com custo e estado disponível/indisponível.
-- [ ] Criar área para `TowerDetails`, que será preenchida por dados reais em etapa futura.
-- [ ] Criar `WaveControls` com Iniciar onda, Pausar/Retomar e Velocidade, mantendo apenas as ações já implementadas habilitadas.
-- [ ] Definir disposição desktop com barra lateral e mobile com barra inferior.
-- [ ] Fazer Canvas responsivo, mantendo proporção `320:192` e mapeamento preparado para mouse/toque.
-- [ ] Estabelecer mensagens de feedback não intrusivas (falta de moedas, célula indisponível, etc.).
-- [ ] Apresentar carregamento dos sprites até a cena estar pronta.
+- [x] Criar `/play` com shell de jogo e área central de Canvas.
+- [x] Criar `GameHUD` com vidas, moedas, onda atual/total e indicadores visuais usando sprites reais.
+- [x] Criar `TowerSelector` mostrando Archer, Cannon e Ice Wizard com custo e estado disponível/indisponível.
+- [x] Criar área para `TowerDetails`, que será preenchida por dados reais em etapa futura.
+- [x] Criar `WaveControls` com Iniciar onda, Pausar/Retomar e Velocidade, mantendo apenas as ações já implementadas habilitadas.
+- [x] Definir disposição desktop com barra lateral e mobile com barra inferior.
+- [x] Fazer Canvas responsivo, mantendo proporção `320:192` e mapeamento preparado para mouse/toque.
+- [x] Estabelecer mensagens de feedback não intrusivas (falta de moedas, célula indisponível, etc.).
+- [x] Apresentar carregamento dos sprites até a cena estar pronta.
 
 **Aceite**
 
-- [ ] Layout não quebra em `390×844`, `768×1024` e `1366×768`.
-- [ ] HUD visível sem cobrir o mapa.
-- [ ] Botões possuem área adequada para toque.
-- [ ] Não há controles falsamente funcionais: ações ainda indisponíveis ficam desativadas.
-- [ ] Fonte, ícones, painéis e botões combinam com a identidade visual.
+- [x] Layout não quebra em `390×844`, `768×1024` e `1366×768`.
+- [x] HUD visível sem cobrir o mapa.
+- [x] Botões possuem área adequada para toque.
+- [x] Não há controles falsamente funcionais: ações ainda indisponíveis ficam desativadas.
+- [x] Fonte, ícones, painéis e botões combinam com a identidade visual.
 
 **Dependência:** Etapa 02.
+
+```text
+ETAPA CONCLUÍDA: 03 — Cena de jogo, HUD e layout responsivo
+IMPLEMENTADO:
+- `/play` agora renderiza `GameShell` (client): HUD no topo; desktop (≥ 1024 px) com mapa central e
+  barra lateral de 24 rem; mobile/tablet com mapa na largura total e painéis abaixo (rolagem vertical).
+- `GameHUD`: botão de menu + vidas (coração), moedas (moeda) e onda (sprite do Normal Slime) em
+  painéis `slot`; rótulos visíveis a partir de 640 px e `sr-only` no mobile.
+- `TowerSelector`: grade de 3 cartões (sprite real, nome, custo, "Disponível"/"Faltam N"), sprite em
+  cinza quando falta ouro; custos vêm de `game/data/towers.ts`.
+- `TowerDetails`: painel com estado vazio ("Nenhuma torre selecionada").
+- `WaveControls`: Iniciar onda, Pausar/Retomar e 1×/2×, com motivo de bloqueio por fase
+  (preparação/andamento/fim). Comandos chegam por props; sem handler, o botão fica desativado.
+- Controles indisponíveis usam `aria-disabled` (visual desativado do `PixelButton`) e, ao toque,
+  mostram o motivo via `FeedbackToast` (região `role=status`, sem bloquear o mapa, 2,6 s,
+  respeita `prefers-reduced-motion`), alimentado por `useFeedback`.
+- `GameCanvas`: proporção 320:192 (quadro limitado por largura e altura via container query no
+  desktop), backing store = tamanho CSS × `devicePixelRatio` com `ResizeObserver`, transformação
+  mundo→pixels e `screenToWorld`/`worldToCell` (`game/utils/geometry.ts`) para mouse/toque; célula
+  apontada destacada e exposta em `data-pointer-cell`. Desenho provisório: padrão de grama real +
+  grade auxiliar (substituído pelo `GameRenderer` na Etapa 04).
+- `SpriteLoader` (cache por URL, falhas devolvidas como dados e removidas do cache para nova
+  tentativa) + `useSpriteLoader`; `SceneLoading` mostra progresso com `PixelProgress`
+  (Bar01a + Fill01a) ou erro com "Tentar novamente".
+- Contratos `GamePhase`/`TowerType`/`GameSnapshot` em `game/types/game.ts` e
+  `createInitialSnapshot()` (preparação, 0/10, 20 vidas, 150 moedas).
+ARQUIVOS PRINCIPAIS:
+- src/app/play/page.tsx, src/components/layout/GameShell.tsx
+- src/components/game/GameHUD.tsx, TowerSelector.tsx, TowerDetails.tsx, WaveControls.tsx,
+  GameCanvas.tsx, FeedbackToast.tsx, SceneLoading.tsx
+- src/components/ui/PixelProgress.tsx, PixelPanel.tsx (`pixelPanelStyle`)
+- src/game/types/game.ts, src/game/data/towers.ts, src/game/engine/snapshot.ts,
+  src/game/engine/SpriteLoader.ts, src/game/utils/geometry.ts
+- src/hooks/useSpriteLoader.ts, src/hooks/useFeedback.ts
+- src/lib/assets.ts (`GAME_SCENE_SPRITES`, `fill`), src/app/globals.css
+VALIDAÇÃO:
+- npm run lint: ok. npm run typecheck: ok. npm run build: ok (/, /creditos, /play estáticos).
+- Edge headless (CDP) contra `next start` em 390×844 (DPR 3, toque), 768×1024 (DPR 2, toque) e
+  1366×768: sem overflow horizontal, sem imagens quebradas, sem erros de console nem HTTP ≥ 400,
+  todos os botões/links ≥ 44×44 px, nenhum controle fora da viewport, HUD acima do canvas sem
+  sobreposição, barra lateral sem rolagem interna em 1366×768, canvas com razão 1,6667 e backing
+  store = CSS × DPR.
+- Ponteiro: cantos do canvas → células (0,0), (19,0), (0,11), (19,11); centro → (10,5–6).
+- Toque em cartão de torre desativado exibe o aviso; carregamento com rede lenta exibe o painel
+  de progresso. Capturas conferidas visualmente nas três viewports.
+PENDÊNCIAS / RISCOS:
+- Nenhum comando de jogo está ativo ainda (todos desativados com motivo), por definição da etapa.
+- `SpriteLoader` foi antecipado de forma mínima para o carregamento da cena; a Etapa 04 deve
+  estendê-lo (manifesto, recortes) em vez de criar outro.
+- Escala do canvas não é múltiplo inteiro (ex.: 354 px CSS em 390 px); avaliar nitidez dos tiles
+  na Etapa 04 e, se necessário, ajustar a escala.
+- `game/data/towers.ts` só tem dados de apresentação; atributos de combate entram na Etapa 06.
+- Licença do pacote Simple Tower Defense continua pendente (bloqueia publicação).
+PRÓXIMA ETAPA:
+- Etapa 04 — Canvas, carregamento e renderização do mapa.
+```
 
 ---
 
@@ -1089,7 +1145,7 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | --- | --- | --- |
 | 01 — Fundação | Concluída | `src/` + alias, Fredoka, tokens, `lib/assets.ts`; lint/build/typecheck ok |
 | 02 — Design system e menu | Concluída | Pixel UI 9-slice, menu com cenário animado, Como jogar, /creditos, /play provisório |
-| 03 — HUD responsivo | Pendente | — |
+| 03 — HUD responsivo | Concluída | GameShell, HUD, seletor, detalhes, controles desativados com motivo, canvas responsivo + ponteiro, loader |
 | 04 — Canvas e mapa | Pendente | — |
 | 05 — Engine e movimento | Pendente | — |
 | 06 — Construção e economia | Pendente | — |
@@ -1099,5 +1155,5 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 10 — Mobile e controles | Pendente | — |
 | 11 — Persistência e entrega | Pendente | — |
 
-**Ponto de retomada atual:** Etapa 03 — Cena de jogo, HUD e layout responsivo.
+**Ponto de retomada atual:** Etapa 04 — Canvas, carregamento e renderização do mapa.
 

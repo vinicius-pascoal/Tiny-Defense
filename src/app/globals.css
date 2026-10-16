@@ -167,6 +167,56 @@ canvas {
     animation: sprite-frames var(--frame-duration) steps(var(--frames)) infinite;
   }
 
+  /* Cartão de torre no seletor da partida (moldura `slot` via estilo inline). */
+  .tower-card {
+    min-height: var(--spacing-touch);
+    cursor: pointer;
+    user-select: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (hover: hover) {
+    .tower-card:hover:not([aria-disabled="true"]) {
+      filter: brightness(1.15);
+    }
+  }
+
+  .tower-card[aria-pressed="true"] {
+    outline: 3px solid var(--color-gold-400);
+    outline-offset: 1px;
+  }
+
+  .tower-card[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.75;
+  }
+
+  .tower-card--unaffordable .tower-card__sprite {
+    filter: grayscale(1);
+    opacity: 0.6;
+  }
+
+  /* Área do mapa: no desktop, o quadro cabe na largura e na altura disponíveis. */
+  .game-stage {
+    --stage-border: calc(3 * var(--px));
+    width: min(100%, calc((100dvh - 9rem) * 5 / 3 + 2 * var(--stage-border)));
+  }
+
+  @media (min-width: 1024px) {
+    .game-stage-area {
+      container-type: size;
+    }
+
+    .game-stage {
+      width: min(100cqw, calc((100cqh - 2 * var(--stage-border)) * 5 / 3 + 2 * var(--stage-border)));
+    }
+  }
+
+  .feedback-toast {
+    animation: toast-in 160ms ease-out both;
+  }
+
   /* Inimigos decorativos do menu atravessando o cenário até o castelo. */
   .menu-walker {
     animation: menu-walk var(--walk-duration) linear var(--walk-delay) infinite both;
@@ -179,6 +229,13 @@ canvas {
   }
   to {
     background-position: calc(-1 * var(--sheet-w) * var(--px)) 0;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(2 * var(--px)));
   }
 }
 
@@ -205,6 +262,10 @@ canvas {
   .menu-walker {
     animation: none;
     transform: translateX(calc(var(--walk-rest) * var(--px)));
+  }
+
+  .feedback-toast {
+    animation: none;
   }
 }
 
