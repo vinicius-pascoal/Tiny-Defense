@@ -1,0 +1,490 @@
+{
+  "description": "Tiny Defense - sprite metadata extracted from supplied asset packs",
+  "sprites": {
+    "game/enemies/bat": {
+      "src": "/assets/game/enemies/spr_bat.png",
+      "width": 40,
+      "height": 7,
+      "frames": 4,
+      "frameWidth": 10,
+      "frameHeight": 7,
+      "direction": "horizontal"
+    },
+    "game/enemies/demon": {
+      "src": "/assets/game/enemies/spr_demon.png",
+      "width": 40,
+      "height": 8,
+      "frames": 4,
+      "frameWidth": 10,
+      "frameHeight": 8,
+      "direction": "horizontal"
+    },
+    "game/enemies/skeleton": {
+      "src": "/assets/game/enemies/spr_skeleton.png",
+      "width": 32,
+      "height": 7,
+      "frames": 4,
+      "frameWidth": 8,
+      "frameHeight": 7,
+      "direction": "horizontal"
+    },
+    "game/enemies/king_slime": {
+      "src": "/assets/game/enemies/spr_king_slime.png",
+      "width": 64,
+      "height": 12,
+      "frames": 4,
+      "frameWidth": 16,
+      "frameHeight": 12,
+      "direction": "horizontal"
+    },
+    "game/enemies/goblin": {
+      "src": "/assets/game/enemies/spr_goblin.png",
+      "width": 44,
+      "height": 8,
+      "frames": 4,
+      "frameWidth": 11,
+      "frameHeight": 8,
+      "direction": "horizontal"
+    },
+    "game/enemies/big_slime": {
+      "src": "/assets/game/enemies/spr_big_slime.png",
+      "width": 56,
+      "height": 8,
+      "frames": 4,
+      "frameWidth": 14,
+      "frameHeight": 8,
+      "direction": "horizontal"
+    },
+    "game/enemies/ghost": {
+      "src": "/assets/game/enemies/spr_ghost.png",
+      "width": 80,
+      "height": 10,
+      "frames": 8,
+      "frameWidth": 10,
+      "frameHeight": 10,
+      "direction": "horizontal"
+    },
+    "game/enemies/zombie": {
+      "src": "/assets/game/enemies/spr_zombie.png",
+      "width": 32,
+      "height": 7,
+      "frames": 4,
+      "frameWidth": 8,
+      "frameHeight": 7,
+      "direction": "horizontal"
+    },
+    "game/enemies/normal_slime": {
+      "src": "/assets/game/enemies/spr_normal_slime.png",
+      "width": 48,
+      "height": 7,
+      "frames": 4,
+      "frameWidth": 12,
+      "frameHeight": 7,
+      "direction": "horizontal"
+    },
+    "game/environment/decoration/rock_01": {
+      "src": "/assets/game/environment/decoration/spr_rock_01.png",
+      "width": 12,
+      "height": 5,
+      "frames": 1,
+      "frameWidth": 12,
+      "frameHeight": 5,
+      "direction": "static"
+    },
+    "game/environment/decoration/tree_02_spruce": {
+      "src": "/assets/game/environment/decoration/spr_tree_02_spruce.png",
+      "width": 14,
+      "height": 16,
+      "frames": 1,
+      "frameWidth": 14,
+      "frameHeight": 16,
+      "direction": "static"
+    },
+    "game/environment/decoration/rock_03": {
+      "src": "/assets/game/environment/decoration/spr_rock_03.png",
+      "width": 12,
+      "height": 7,
+      "frames": 1,
+      "frameWidth": 12,
+      "frameHeight": 7,
+      "direction": "static"
+    },
+    "game/environment/decoration/tree_02_normal": {
+      "src": "/assets/game/environment/decoration/spr_tree_02_normal.png",
+      "width": 14,
+      "height": 16,
+      "frames": 1,
+      "frameWidth": 14,
+      "frameHeight": 16,
+      "direction": "static"
+    },
+    "game/environment/decoration/tree_01_normal": {
+      "src": "/assets/game/environment/decoration/spr_tree_01_normal.png",
+      "width": 14,
+      "height": 16,
+      "frames": 1,
+      "frameWidth": 14,
+      "frameHeight": 16,
+      "direction": "static"
+    },
+    "game/environment/decoration/tree_01_autumn": {
+      "src": "/assets/game/environment/decoration/spr_tree_01_autumn.png",
+      "width": 14,
+      "height": 16,
+      "frames": 1,
+      "frameWidth": 14,
+      "frameHeight": 16,
+      "direction": "static"
+    },
+    "game/environment/decoration/mushroom_02": {
+      "src": "/assets/game/environment/decoration/spr_mushroom_02.png",
+      "width": 8,
+      "height": 8,
+      "frames": 1,
+      "frameWidth": 8,
+      "frameHeight": 8,
+      "direction": "static"
+    },
+    "game/environment/decoration/tree_02_autumn": {
+      "src": "/assets/game/environment/decoration/spr_tree_02_autumn.png",
+      "width": 12,
+      "height": 16,
+      "frames": 1,
+      "frameWidth": 12,
+      "frameHeight": 16,
+      "direction": "static"
+    },
+    "game/environment/decoration/rock_02": {
+      "src": "/assets/game/environment/decoration/spr_rock_02.png",
+      "width": 14,
+      "height": 9,
+      "frames": 1,
+      "frameWidth": 14,
+      "frameHeight": 9,
+      "direction": "static"
+    },
+    "game/environment/decoration/tree_01_cherry_blossom": {
+      "src": "/assets/game/environment/decoration/spr_tree_01_cherry_blossom.png",
+      "width": 14,
+      "height": 16,
+      "frames": 1,
+      "frameWidth": 14,
+      "frameHeight": 16,
+      "direction": "static"
+    },
+    "game/environment/decoration/mushroom_01": {
+      "src": "/assets/game/environment/decoration/spr_mushroom_01.png",
+      "width": 8,
+      "height": 6,
+      "frames": 1,
+      "frameWidth": 8,
+      "frameHeight": 6,
+      "direction": "static"
+    },
+    "game/environment/grass/grass_03": {
+      "src": "/assets/game/environment/grass/spr_grass_03.png",
+      "width": 32,
+      "height": 32,
+      "frames": 1,
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "direction": "static"
+    },
+    "game/environment/grass/grass_02": {
+      "src": "/assets/game/environment/grass/spr_grass_02.png",
+      "width": 32,
+      "height": 32,
+      "frames": 1,
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "direction": "static"
+    },
+    "game/environment/grass/grass_01": {
+      "src": "/assets/game/environment/grass/spr_grass_01.png",
+      "width": 32,
+      "height": 32,
+      "frames": 1,
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "direction": "static"
+    },
+    "game/environment/tiles/tile_set_ground": {
+      "src": "/assets/game/environment/tiles/spr_tile_set_ground.png",
+      "width": 48,
+      "height": 48,
+      "frames": 1,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "direction": "static"
+    },
+    "game/environment/tiles/tile_set_stone": {
+      "src": "/assets/game/environment/tiles/spr_tile_set_stone.png",
+      "width": 48,
+      "height": 48,
+      "frames": 1,
+      "frameWidth": 48,
+      "frameHeight": 48,
+      "direction": "static"
+    },
+    "game/buildings/castles/castle_blue": {
+      "src": "/assets/game/buildings/castles/spr_castle_blue.png",
+      "width": 208,
+      "height": 38,
+      "frames": 4,
+      "frameWidth": 52,
+      "frameHeight": 38,
+      "direction": "horizontal"
+    },
+    "game/buildings/castles/castle_red": {
+      "src": "/assets/game/buildings/castles/spr_castle_red.png",
+      "width": 208,
+      "height": 38,
+      "frames": 4,
+      "frameWidth": 52,
+      "frameHeight": 38,
+      "direction": "horizontal"
+    },
+    "game/buildings/castles/castle_green": {
+      "src": "/assets/game/buildings/castles/spr_castle_green.png",
+      "width": 208,
+      "height": 38,
+      "frames": 4,
+      "frameWidth": 52,
+      "frameHeight": 38,
+      "direction": "horizontal"
+    },
+    "game/buildings/towers/tower_archer": {
+      "src": "/assets/game/buildings/towers/spr_tower_archer.png",
+      "width": 16,
+      "height": 23,
+      "frames": 1,
+      "frameWidth": 16,
+      "frameHeight": 23,
+      "direction": "static"
+    },
+    "game/buildings/towers/tower_crossbow": {
+      "src": "/assets/game/buildings/towers/spr_tower_crossbow.png",
+      "width": 18,
+      "height": 33,
+      "frames": 1,
+      "frameWidth": 18,
+      "frameHeight": 33,
+      "direction": "static"
+    },
+    "game/buildings/towers/tower_poison_wizard": {
+      "src": "/assets/game/buildings/towers/spr_tower_poison_wizard.png",
+      "width": 16,
+      "height": 24,
+      "frames": 1,
+      "frameWidth": 16,
+      "frameHeight": 24,
+      "direction": "static"
+    },
+    "game/buildings/towers/tower_lightning_tower": {
+      "src": "/assets/game/buildings/towers/spr_tower_lightning_tower.png",
+      "width": 18,
+      "height": 35,
+      "frames": 1,
+      "frameWidth": 18,
+      "frameHeight": 35,
+      "direction": "static"
+    },
+    "game/buildings/towers/tower_ice_wizard": {
+      "src": "/assets/game/buildings/towers/spr_tower_ice_wizard.png",
+      "width": 16,
+      "height": 26,
+      "frames": 1,
+      "frameWidth": 16,
+      "frameHeight": 26,
+      "direction": "static"
+    },
+    "game/buildings/towers/tower_cannon": {
+      "src": "/assets/game/buildings/towers/spr_tower_cannon.png",
+      "width": 18,
+      "height": 30,
+      "frames": 1,
+      "frameWidth": 18,
+      "frameHeight": 30,
+      "direction": "static"
+    },
+    "game/projectiles/tower_archer_projectile": {
+      "src": "/assets/game/projectiles/spr_tower_archer_projectile.png",
+      "width": 9,
+      "height": 5,
+      "frames": 1,
+      "frameWidth": 9,
+      "frameHeight": 5,
+      "direction": "static"
+    },
+    "game/projectiles/tower_crossbow_projectile": {
+      "src": "/assets/game/projectiles/spr_tower_crossbow_projectile.png",
+      "width": 6,
+      "height": 13,
+      "frames": 1,
+      "frameWidth": 6,
+      "frameHeight": 13,
+      "direction": "static"
+    },
+    "game/projectiles/tower_ice_wizard_projectile": {
+      "src": "/assets/game/projectiles/spr_tower_ice_wizard_projectile.png",
+      "width": 5,
+      "height": 5,
+      "frames": 1,
+      "frameWidth": 5,
+      "frameHeight": 5,
+      "direction": "static"
+    },
+    "game/projectiles/tower_cannon_projectile": {
+      "src": "/assets/game/projectiles/spr_tower_cannon_projectile.png",
+      "width": 8,
+      "height": 8,
+      "frames": 1,
+      "frameWidth": 8,
+      "frameHeight": 8,
+      "direction": "static"
+    },
+    "game/projectiles/tower_poison_wizard_projectile": {
+      "src": "/assets/game/projectiles/spr_tower_poison_wizard_projectile.png",
+      "width": 5,
+      "height": 5,
+      "frames": 1,
+      "frameWidth": 5,
+      "frameHeight": 5,
+      "direction": "static"
+    },
+    "game/projectiles/tower_lightning_tower_projectile": {
+      "src": "/assets/game/projectiles/spr_tower_lightning_tower_projectile.png",
+      "width": 4,
+      "height": 6,
+      "frames": 1,
+      "frameWidth": 4,
+      "frameHeight": 6,
+      "direction": "static"
+    },
+    "game/buildings/decorative-towers/normal_tower_02_green": {
+      "src": "/assets/game/buildings/decorative-towers/spr_normal_tower_02_green.png",
+      "width": 96,
+      "height": 34,
+      "frames": 4,
+      "frameWidth": 24,
+      "frameHeight": 34,
+      "direction": "horizontal"
+    },
+    "game/buildings/decorative-towers/normal_tower_02_red": {
+      "src": "/assets/game/buildings/decorative-towers/spr_normal_tower_02_red.png",
+      "width": 96,
+      "height": 34,
+      "frames": 4,
+      "frameWidth": 24,
+      "frameHeight": 34,
+      "direction": "horizontal"
+    },
+    "game/buildings/decorative-towers/normal_tower_01_blue": {
+      "src": "/assets/game/buildings/decorative-towers/spr_normal_tower_01_blue.png",
+      "width": 88,
+      "height": 28,
+      "frames": 4,
+      "frameWidth": 22,
+      "frameHeight": 28,
+      "direction": "horizontal"
+    },
+    "game/buildings/decorative-towers/normal_tower_01_green": {
+      "src": "/assets/game/buildings/decorative-towers/spr_normal_tower_01_green.png",
+      "width": 88,
+      "height": 28,
+      "frames": 4,
+      "frameWidth": 22,
+      "frameHeight": 28,
+      "direction": "horizontal"
+    },
+    "game/buildings/decorative-towers/normal_tower_02_blue": {
+      "src": "/assets/game/buildings/decorative-towers/spr_normal_tower_02_blue.png",
+      "width": 96,
+      "height": 34,
+      "frames": 4,
+      "frameWidth": 24,
+      "frameHeight": 34,
+      "direction": "horizontal"
+    },
+    "game/buildings/decorative-towers/normal_tower_01_red": {
+      "src": "/assets/game/buildings/decorative-towers/spr_normal_tower_01_red.png",
+      "width": 88,
+      "height": 28,
+      "frames": 4,
+      "frameWidth": 22,
+      "frameHeight": 28,
+      "direction": "horizontal"
+    }
+  },
+  "animationGroups": {
+    "UI_TravelBook_Marker01aHide": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_Marker01aHide_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Marker01aHide_2.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Marker01aHide_3.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Marker01aHide_4.png"
+    ],
+    "UI_TravelBook_Button01a": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_Button01a_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Button01a_2.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Button01a_3.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Button01a_4.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Button01a_5.png"
+    ],
+    "UI_TravelBook_CommandActionHold01a": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionHold01a_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionHold01a_2.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionHold01a_3.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionHold01a_4.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionHold01a_5.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionHold01a_6.png"
+    ],
+    "UI_TravelBook_CommandActionDirect01a": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionDirect01a_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionDirect01a_2.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionDirect01a_3.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionDirect01a_4.png"
+    ],
+    "UI_TravelBook_Marker01aShow": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_Marker01aShow_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Marker01aShow_2.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Marker01aShow_3.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Marker01aShow_4.png"
+    ],
+    "UI_TravelBook_Alert01a": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_Alert01a_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Alert01a_2.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Alert01a_3.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Alert01a_4.png"
+    ],
+    "UI_TravelBook_Point01a": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_Point01a_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Point01a_2.png"
+    ],
+    "UI_TravelBook_SlotCursor01a": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_SlotCursor01a_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_SlotCursor01a_2.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_SlotCursor01a_3.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_SlotCursor01a_4.png"
+    ],
+    "UI_TravelBook_Point02a": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_Point02a_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_Point02a_2.png"
+    ],
+    "UI_TravelBook_CommandActionPress01a": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionPress01a_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionPress01a_2.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionPress01a_3.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_CommandActionPress01a_4.png"
+    ],
+    "UI_TravelBook_MouseCursorClick01b": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_MouseCursorClick01b_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_MouseCursorClick01b_2.png"
+    ],
+    "UI_TravelBook_MouseCursorClick01a": [
+      "/assets/ui/travelbook/animated/UI_TravelBook_MouseCursorClick01a_1.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_MouseCursorClick01a_2.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_MouseCursorClick01a_3.png",
+      "/assets/ui/travelbook/animated/UI_TravelBook_MouseCursorClick01a_4.png"
+    ]
+  }
+}
