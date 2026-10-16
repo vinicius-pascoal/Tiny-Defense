@@ -2,7 +2,7 @@
 
 > **Documento de execução para um agente de programação (Codex ou equivalente).**
 >
-> **Status:** Etapas 01–03 concluídas; próxima: Etapa 04.
+> **Status:** Etapas 01–04 concluídas; próxima: Etapa 05.
 > **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + React + Canvas 2D.
 > **Fonte:** [Fredoka — Google Fonts](https://fonts.google.com/specimen/Fredoka), via `next/font/google`.
 > **Plataformas:** navegador desktop e mobile, com interação por mouse, toque e teclado onde fizer sentido.
@@ -741,27 +741,76 @@ PRÓXIMA ETAPA:
 
 **Tarefas**
 
-- [ ] Implementar `SpriteLoader` com cache, carregamento assíncrono e tratamento de falhas.
-- [ ] Ler o manifesto de sprites do gameplay e tipar suas informações principais.
-- [ ] Criar `GameRenderer` desacoplado da simulação.
-- [ ] Definir dimensões lógicas (`20×12`, `16 px`) e tratamento correto do tamanho CSS e `devicePixelRatio`.
-- [ ] Usar tiles recortados dos atlas `spr_tile_set_ground.png` e `spr_tile_set_stone.png`.
-- [ ] Desenhar o caminho sugerido com curvas, continuidade visual e área de chegada.
-- [ ] Posicionar o castelo verde na saída, sem cortes ou distorções.
-- [ ] Renderizar árvores, pedras, cogumelos e grama com parcimônia, sem cobrir o caminho.
-- [ ] Implementar tratamento de `resize` e transformação de coordenadas de pointer para mundo lógico.
-- [ ] Implementar ordem de desenho adequada: terreno → caminho → decorações de fundo → unidades/torres → efeitos → elementos contextuais.
+- [x] Implementar `SpriteLoader` com cache, carregamento assíncrono e tratamento de falhas.
+- [x] Ler o manifesto de sprites do gameplay e tipar suas informações principais.
+- [x] Criar `GameRenderer` desacoplado da simulação.
+- [x] Definir dimensões lógicas (`20×12`, `16 px`) e tratamento correto do tamanho CSS e `devicePixelRatio`.
+- [x] Usar tiles recortados dos atlas `spr_tile_set_ground.png` e `spr_tile_set_stone.png`.
+- [x] Desenhar o caminho sugerido com curvas, continuidade visual e área de chegada.
+- [x] Posicionar o castelo verde na saída, sem cortes ou distorções.
+- [x] Renderizar árvores, pedras, cogumelos e grama com parcimônia, sem cobrir o caminho.
+- [x] Implementar tratamento de `resize` e transformação de coordenadas de pointer para mundo lógico.
+- [x] Implementar ordem de desenho adequada: terreno → caminho → decorações de fundo → unidades/torres → efeitos → elementos contextuais.
 
 **Aceite**
 
-- [ ] O mapa é renderizado **com PNGs reais**, sem uso de retângulos de cor como terreno definitivo.
-- [ ] Não existem linhas de tile desconectadas nem caminhos visualmente diferentes dos lógicos.
-- [ ] Pixel art permanece nítida e proporcional.
-- [ ] O mapa cabe na tela sem deformação em desktop/mobile.
-- [ ] Um teste manual de pointer identifica corretamente células de cantos e centro após redimensionar.
-- [ ] Não há recarregamento das mesmas imagens a cada frame.
+- [x] O mapa é renderizado **com PNGs reais**, sem uso de retângulos de cor como terreno definitivo.
+- [x] Não existem linhas de tile desconectadas nem caminhos visualmente diferentes dos lógicos.
+- [x] Pixel art permanece nítida e proporcional.
+- [x] O mapa cabe na tela sem deformação em desktop/mobile.
+- [x] Um teste manual de pointer identifica corretamente células de cantos e centro após redimensionar.
+- [x] Não há recarregamento das mesmas imagens a cada frame.
 
 **Dependência:** Etapa 03.
+
+```text
+ETAPA CONCLUÍDA: 04 — Canvas, carregamento e renderização do mapa
+IMPLEMENTADO:
+- `LEVEL_1` (`game/data/levels.ts`): waypoints, castelo (posição + área bloqueada) e 14 decorações
+  em células próprias. AJUSTE DE MAPA (§5.2): a coluna descendente final passou de 16 para 15 e o
+  caminho termina subindo até o portão do castelo: …(12,3)→(15,3)→(15,9)→(18,9)→(18,7). Motivo: o
+  castelo tem 52 px e o portão fica na base; com a coluna 16, ele cobriria a estrada ou seria
+  cortado pela borda direita.
+- `PathSystem.expandWaypoints`: células contíguas sem duplicar cantos (erro em segmento diagonal).
+- `MapLayout` (`createMapLayout`): tipo de cada célula (grass/path/castle/decoration), usado pelo
+  render agora e pela construção na Etapa 06, e conexões de cada célula do caminho. Caminho visual e
+  lógico vêm da mesma fonte.
+- Os atlas 48×48 são um anel de estrada 3×3 (cantos, retas, centro vazio); cada célula usa o recorte
+  16×16 correspondente às suas conexões. Terra no percurso, pedra nas 3 últimas células (acesso ao
+  castelo). Entrada pela borda esquerda com trecho reto.
+- `GameRenderer`: camada estática (grama 32×32 repetida, estrada, decorações) pré-renderizada uma vez
+  em 320×192 e copiada a cada quadro com `imageSmoothingEnabled = false`; depois o castelo animado
+  (4 quadros, parado com `prefers-reduced-motion`) e a célula apontada. Reconstrói a camada em
+  `contextrestored`. Não lê nem altera regras.
+- `getFrameRect` em `lib/spriteManifest.ts` (recorte por quadro a partir do manifesto).
+- `GameCanvas`: cria o renderer quando os sprites estão prontos; `ResizeObserver` + `resize` da
+  janela (mudança de DPR) ajustam o backing store; um único `requestAnimationFrame` por montagem,
+  cancelado ao desmontar. A grade auxiliar da Etapa 03 foi removida.
+- `useSpriteLoader` recebe a lista da cena + `getLevelSprites(LEVEL_1)` (decorações do nível).
+ARQUIVOS PRINCIPAIS:
+- src/game/data/levels.ts, src/game/systems/PathSystem.ts, src/game/systems/MapLayout.ts
+- src/game/engine/GameRenderer.ts, src/lib/spriteManifest.ts
+- src/components/game/GameCanvas.tsx, src/components/layout/GameShell.tsx
+VALIDAÇÃO:
+- npm run lint: ok. npm run typecheck: ok. npm run build: ok.
+- Edge headless (CDP) em 390×844, 768×1024 e 1366×768: sem overflow, sem imagens quebradas, sem erros
+  de console nem HTTP ≥ 400, controles ≥ 44 px.
+- Ponteiro após redimensionar (1100×700, 820×600 e 1366×768 com DPR 1,25): cantos → (0,0) e (19,11),
+  centro → (9,5), portão → (18,7); backing store = CSS × DPR em todos os tamanhos.
+- 0 requisições de PNG durante 2 s de quadros após os redimensionamentos (imagens só no cache).
+- Pixels do canvas exportados e ampliados: cantos da estrada, junção terra→pedra e castelo sem
+  emendas, cortes ou distorção.
+PENDÊNCIAS / RISCOS:
+- A escala do canvas é fracionária (ex.: 2,86× em 1366×768 com DPR 1); com vizinho mais próximo
+  alguns pixels do sprite ficam 1 px de tela maiores que outros. Não é perceptível nas capturas;
+  se incomodar, ajustar o tamanho do quadro para múltiplos inteiros.
+- O laço de quadros vive no `GameCanvas` só para desenhar; na Etapa 05 ele passa a ser o laço único
+  da engine (passo fixo), sem criar um segundo RAF.
+- Castelo e decorações não são ordenados por profundidade com unidades/torres; avaliar na Etapa 06
+  quando houver torres altas perto do castelo (células da área do castelo já são bloqueadas).
+PRÓXIMA ETAPA:
+- Etapa 05 — Engine, estado da partida e movimentação de inimigos.
+```
 
 ---
 
@@ -1146,7 +1195,7 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 01 — Fundação | Concluída | `src/` + alias, Fredoka, tokens, `lib/assets.ts`; lint/build/typecheck ok |
 | 02 — Design system e menu | Concluída | Pixel UI 9-slice, menu com cenário animado, Como jogar, /creditos, /play provisório |
 | 03 — HUD responsivo | Concluída | GameShell, HUD, seletor, detalhes, controles desativados com motivo, canvas responsivo + ponteiro, loader |
-| 04 — Canvas e mapa | Pendente | — |
+| 04 — Canvas e mapa | Concluída | Atlas de estrada por conexões, camada estática, castelo animado, caminho ajustado (col. 15 → portão em 18,7) |
 | 05 — Engine e movimento | Pendente | — |
 | 06 — Construção e economia | Pendente | — |
 | 07 — Combate | Pendente | — |
@@ -1155,5 +1204,5 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 10 — Mobile e controles | Pendente | — |
 | 11 — Persistência e entrega | Pendente | — |
 
-**Ponto de retomada atual:** Etapa 04 — Canvas, carregamento e renderização do mapa.
+**Ponto de retomada atual:** Etapa 05 — Engine, estado da partida e movimentação de inimigos.
 

@@ -1,99 +1,75 @@
 "use client";
 
 import { useEffect, useRef, type PointerEvent } from "react";
-import { GRID_COLS, GRID_ROWS, TILE_SIZE, WORLD_HEIGHT, WORLD_WIDTH } from "@/game/config/constants";
+import { WORLD_HEIGHT, WORLD_WIDTH } from "@/game/config/constants";
+import type { LevelDefinition } from "@/game/data/levels";
+import { GameRenderer } from "@/game/engine/GameRenderer";
+import type { MapLayout } from "@/game/systems/MapLayout";
 import type { GridPosition } from "@/game/types/game";
 import { screenToWorld, worldToCell } from "@/game/utils/geometry";
-import { GRASS_SPRITES } from "@/lib/assets";
 
 type GameCanvasProps = {
   /** Sprites já carregados; `null` enquanto a cena carrega. */
   images: ReadonlyMap<string, HTMLImageElement> | null;
+  level: LevelDefinition;
+  layout: MapLayout;
 };
 
 /**
- * Canvas do mapa com proporção lógica 320:192. Ajusta a resolução interna ao tamanho
- * CSS × `devicePixelRatio` e converte mouse/toque em células da grade.
+ * Canvas do mapa com proporção lógica 320:192. Mantém a resolução interna igual ao tamanho
+ * CSS × `devicePixelRatio`, converte mouse/toque em células e delega o desenho ao `GameRenderer`.
  *
- * Desenho provisório da Etapa 03 (grama + grade + célula apontada); o `GameRenderer`
- * da Etapa 04 assume o desenho do mapa real.
+ * O laço de quadros daqui só desenha; na Etapa 05 ele passa a ser o laço único da engine.
  */
-export function GameCanvas({ images }: GameCanvasProps) {
+export function GameCanvas({ images, level, layout }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointerCell = useRef<GridPosition | null>(null);
-  const drawRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
+    if (!canvas || !images) return;
 
-    const grass = images?.get(GRASS_SPRITES.grass01);
-    const grassPattern = grass ? ctx.createPattern(grass, "repeat") : null;
+    let renderer: GameRenderer;
+    try {
+      renderer = new GameRenderer(canvas, images, level, layout);
+    } catch (error) {
+      console.error(error);
+      return;
+    }
 
-    const draw = () => {
-      // Mundo lógico → pixels do backing store; tudo abaixo é desenhado em unidades do mundo.
-      ctx.setTransform(canvas.width / WORLD_WIDTH, 0, 0, canvas.height / WORLD_HEIGHT, 0, 0);
-      ctx.imageSmoothingEnabled = false;
-
-      ctx.fillStyle = grassPattern ?? "#5f9e3a";
-      ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-
-      // Grade auxiliar, só como referência de células até o mapa real existir.
-      ctx.strokeStyle = "rgb(19 76 76 / 0.25)";
-      ctx.lineWidth = 0.5;
-      ctx.beginPath();
-      for (let col = 1; col < GRID_COLS; col++) {
-        ctx.moveTo(col * TILE_SIZE, 0);
-        ctx.lineTo(col * TILE_SIZE, WORLD_HEIGHT);
-      }
-      for (let row = 1; row < GRID_ROWS; row++) {
-        ctx.moveTo(0, row * TILE_SIZE);
-        ctx.lineTo(WORLD_WIDTH, row * TILE_SIZE);
-      }
-      ctx.stroke();
-
-      const cell = pointerCell.current;
-      if (cell) {
-        ctx.fillStyle = "rgb(251 243 223 / 0.3)";
-        ctx.fillRect(cell.col * TILE_SIZE, cell.row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = "#fbf3df";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(cell.col * TILE_SIZE + 0.5, cell.row * TILE_SIZE + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
-      }
-    };
-    drawRef.current = draw;
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      const width = Math.max(1, Math.round(rect.width * dpr));
-      const height = Math.max(1, Math.round(rect.height * dpr));
-      if (canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-      }
-      draw();
+      renderer.resize(rect.width, rect.height, window.devicePixelRatio || 1);
     };
-
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
+    // Mudança de zoom/monitor altera o DPR sem alterar o tamanho CSS.
+    window.addEventListener("resize", resize);
     resize();
 
+    let frameId = requestAnimationFrame(function frame(time) {
+      renderer.render(
+        time,
+        { pointerCell: pointerCell.current },
+        { reducedMotion: motionQuery.matches },
+      );
+      frameId = requestAnimationFrame(frame);
+    });
+
     return () => {
+      cancelAnimationFrame(frameId);
       observer.disconnect();
-      drawRef.current = () => {};
+      window.removeEventListener("resize", resize);
+      renderer.destroy();
     };
-  }, [images]);
+  }, [images, level, layout]);
 
   const setPointerCell = (canvas: HTMLCanvasElement, cell: GridPosition | null) => {
-    const previous = pointerCell.current;
-    if (previous?.col === cell?.col && previous?.row === cell?.row) return;
-
     pointerCell.current = cell;
     // Exposto para testes manuais/automatizados do mapeamento de ponteiro.
     canvas.dataset.pointerCell = cell ? `${cell.col},${cell.row}` : "";
-    drawRef.current();
   };
 
   const updatePointer = (event: PointerEvent<HTMLCanvasElement>) => {
@@ -111,13 +87,13 @@ export function GameCanvas({ images }: GameCanvasProps) {
     <canvas
       ref={canvasRef}
       role="img"
-      aria-label="Mapa da partida"
+      aria-label="Mapa da partida: estrada da esquerda até o castelo, à direita"
       width={WORLD_WIDTH}
       height={WORLD_HEIGHT}
       onPointerMove={updatePointer}
       onPointerDown={updatePointer}
       onPointerLeave={clearHover}
-      className="pixelated block aspect-[320/192] w-full touch-manipulation"
+      className="pixelated block aspect-[320/192] w-full touch-manipulation bg-grass-700"
     />
   );
 }
