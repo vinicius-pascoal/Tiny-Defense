@@ -2,7 +2,7 @@
 
 > **Documento de execução para um agente de programação (Codex ou equivalente).**
 >
-> **Status inicial:** planejamento concluído; implementação não iniciada.
+> **Status:** Etapa 01 concluída; próxima: Etapa 02.
 > **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + React + Canvas 2D.
 > **Fonte:** [Fredoka — Google Fonts](https://fonts.google.com/specimen/Fredoka), via `next/font/google`.
 > **Plataformas:** navegador desktop e mobile, com interação por mouse, toque e teclado onde fizer sentido.
@@ -518,26 +518,61 @@ Especificação inicial de composição; o `WaveSystem` pode programar grupos co
 
 **Tarefas**
 
-- [ ] Conferir se já existe projeto; se não existir, criar com App Router, TypeScript, ESLint, Tailwind e pasta `src/`.
-- [ ] Configurar alias `@/*` apontando para `src/*`.
-- [ ] Configurar importação da fonte `Fredoka` em `src/app/layout.tsx` com `next/font/google`, pesos necessários e fallback.
-- [ ] Aplicar Fredoka globalmente, com normalização de CSS e tokens básicos de cores e espaçamentos.
-- [ ] Extrair `Tiny-Defense-Assets-NextJS.zip` na raiz, se ainda não extraído.
-- [ ] Conferir a existência de `public/assets/meta/sprite-manifest.json` e dos três PNGs das torres iniciais.
-- [ ] Criar um módulo com constantes tipadas para caminhos de sprites principais.
-- [ ] Criar a estrutura inicial de componentes e game, sem gerar arquivos vazios ou classes fictícias.
-- [ ] Configurar scripts adequados para `dev`, `build`, `start`, `lint` e, quando instalados, `test` e `test:e2e`.
-- [ ] Criar `README.md` mínimo com execução local e localização dos assets.
+- [x] Conferir se já existe projeto; se não existir, criar com App Router, TypeScript, ESLint, Tailwind e pasta `src/`.
+- [x] Configurar alias `@/*` apontando para `src/*`.
+- [x] Configurar importação da fonte `Fredoka` em `src/app/layout.tsx` com `next/font/google`, pesos necessários e fallback.
+- [x] Aplicar Fredoka globalmente, com normalização de CSS e tokens básicos de cores e espaçamentos.
+- [x] Extrair `Tiny-Defense-Assets-NextJS.zip` na raiz, se ainda não extraído.
+- [x] Conferir a existência de `public/assets/meta/sprite-manifest.json` e dos três PNGs das torres iniciais.
+- [x] Criar um módulo com constantes tipadas para caminhos de sprites principais.
+- [x] Criar a estrutura inicial de componentes e game, sem gerar arquivos vazios ou classes fictícias.
+- [x] Configurar scripts adequados para `dev`, `build`, `start`, `lint` e, quando instalados, `test` e `test:e2e`.
+- [x] Criar `README.md` mínimo com execução local e localização dos assets.
 
 **Aceite**
 
-- [ ] `npm install` e `npm run dev` funcionam em ambiente limpo.
-- [ ] `npm run lint` e `npm run build` executam com sucesso.
-- [ ] Fonte Fredoka aparece no navegador.
-- [ ] URLs reais `/assets/...` das torres e UI carregam sem erro 404.
-- [ ] Não há dependências de backend/serviços externos.
+- [x] `npm install` e `npm run dev` funcionam em ambiente limpo.
+- [x] `npm run lint` e `npm run build` executam com sucesso.
+- [x] Fonte Fredoka aparece no navegador.
+- [x] URLs reais `/assets/...` das torres e UI carregam sem erro 404.
+- [x] Não há dependências de backend/serviços externos.
 
 **Dependência:** nenhuma.
+
+```text
+ETAPA CONCLUÍDA: 01 — Inicialização, estrutura e dependências
+IMPLEMENTADO:
+- Projeto Next.js 16.4 existente preservado; `app/` movido para `src/app/` e alias `@/*` → `./src/*`.
+- Fredoka via `next/font/google` (fonte variável, eixo 300–700 completo; `weight: "300 700"` é rejeitado
+  para Fredoka, então o campo foi omitido) exposta como `--font-fredoka`, com fallback de sistema.
+- `globals.css`: tokens de cor (grass, dirt, parchment, ink, gold, ice, danger), espaçamentos
+  (`tile`, `hud`, `touch` = 44 px) e utilitário `pixelated`; preflight do Tailwind como normalização.
+- `src/lib/assets.ts`: caminhos tipados de torres, projéteis, inimigos, castelo, tilesets e ícones/painéis UI.
+- `src/game/config/constants.ts`: dimensões lógicas (tile 16, grade 20×12, mundo 320×192).
+- Página `/` provisória exibindo título em Fredoka, os três sprites de torre e os ícones de vida/moeda.
+- Script `typecheck` (`tsc --noEmit`). `test`/`test:e2e` não adicionados: Vitest/Playwright ainda não instalados.
+- README reescrito (execução local, comandos, estrutura, assets, créditos e pendência de licença).
+ARQUIVOS PRINCIPAIS:
+- src/app/layout.tsx, src/app/globals.css, src/app/page.tsx
+- src/lib/assets.ts, src/game/config/constants.ts
+- tsconfig.json, package.json, README.md
+VALIDAÇÃO:
+- npm ci (ambiente limpo): ok.
+- npm run lint: ok, sem avisos.
+- npm run build: ok (`/` estático).
+- npm run typecheck: ok (depende dos tipos gerados por `next dev`/`next build`, ex.: `LayoutProps`).
+- npm run dev e npm run start: `/` responde 200; 24 URLs do módulo de assets + manifesto + 46 sprites
+  do manifesto respondem 200; CSS servido resolve `--font-sans → --font-fredoka → "Fredoka"` e os
+  arquivos woff2 são servidos localmente (sem requisição ao Google em runtime).
+PENDÊNCIAS / RISCOS:
+- Conferência visual da fonte foi feita pelo CSS/woff2 servidos, não por captura de tela.
+- `npm ci` avisa que o postinstall de `unrs-resolver` (dependência do ESLint) não está liberado em
+  `allowScripts`; lint funciona normalmente.
+- `next.config.ts` tem `experimental.agentFeedback`, que faz o `next dev` reescrever `AGENTS.md`.
+- Licença do pacote Simple Tower Defense ainda não verificada (bloqueia publicação, não desenvolvimento).
+PRÓXIMA ETAPA:
+- Etapa 02 — Design system, menu inicial e navegação.
+```
 
 ---
 
@@ -1004,7 +1039,7 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 
 | Etapa | Status | Observações |
 | --- | --- | --- |
-| 01 — Fundação | Pendente | — |
+| 01 — Fundação | Concluída | `src/` + alias, Fredoka, tokens, `lib/assets.ts`; lint/build/typecheck ok |
 | 02 — Design system e menu | Pendente | — |
 | 03 — HUD responsivo | Pendente | — |
 | 04 — Canvas e mapa | Pendente | — |
@@ -1016,5 +1051,5 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 10 — Mobile e controles | Pendente | — |
 | 11 — Persistência e entrega | Pendente | — |
 
-**Ponto de retomada atual:** Etapa 01 — Inicialização, estrutura e dependências.
+**Ponto de retomada atual:** Etapa 02 — Design system, menu inicial e navegação.
 

@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tiny Defense
 
-## Getting Started
+Tower defense 2D em pixel art feito com Next.js (App Router), TypeScript, Tailwind CSS e Canvas 2D.
+O plano de desenvolvimento e o andamento estão em [`ROADMAP.md`](ROADMAP.md).
 
-First, run the development server:
+## Executar localmente
+
+Requisitos: Node.js 20+ e npm.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Nenhuma chave de API, backend ou login é necessário.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Comandos
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Comando             | Descrição                              |
+| ------------------- | -------------------------------------- |
+| `npm run dev`       | Servidor de desenvolvimento            |
+| `npm run build`     | Build de produção                      |
+| `npm run start`     | Servir o build de produção             |
+| `npm run lint`      | ESLint                                 |
+| `npm run typecheck` | Verificação de tipos com `tsc`         |
 
-## Learn More
+## Estrutura
 
-To learn more about Next.js, take a look at the following resources:
+- `src/app/` — rotas e layout (fonte Fredoka via `next/font/google`, tokens em `globals.css`).
+- `src/lib/assets.ts` — caminhos tipados dos sprites principais.
+- `src/game/` — simulação em TypeScript puro (constantes do mundo em `config/constants.ts`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Assets
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Sprites em `public/assets/` (servidos em `/assets/...`):
+  - `game/` — torres, inimigos, castelos, projéteis e cenário.
+  - `ui/travelbook/` — interface (ícones, painéis, molduras).
+  - `meta/sprite-manifest.json` — dimensões e quadros dos 46 sprites de gameplay.
+- Documentação e licenças em `docs/` (`ASSETS_README.md`, `LICENSE_UI.txt`).
 
-## Deploy on Vercel
+## Créditos e licenças
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- UI: **Complete UI Book Styles Pack**, por Crusenho Agus Hennihuno —
+  <https://crusenho.itch.io/complete-ui-book-styles-pack> (ver `docs/LICENSE_UI.txt`).
+- Gameplay: pacote **Simple Tower Defense** — licença ainda não verificada.
+  **Pendência bloqueadora para publicação**, não para desenvolvimento local.
