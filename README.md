@@ -23,6 +23,7 @@ Nenhuma chave de API, backend ou login é necessário.
 | `npm run start`     | Servir o build de produção             |
 | `npm run lint`      | ESLint                                 |
 | `npm run typecheck` | Verificação de tipos com `tsc`         |
+| `npm test`          | Testes unitários da simulação (Vitest) |
 
 ## Estrutura
 

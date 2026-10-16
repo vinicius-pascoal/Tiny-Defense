@@ -2,7 +2,7 @@
 
 > **Documento de execução para um agente de programação (Codex ou equivalente).**
 >
-> **Status:** Etapas 01–04 concluídas; próxima: Etapa 05.
+> **Status:** Etapas 01–05 concluídas; próxima: Etapa 06.
 > **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + React + Canvas 2D.
 > **Fonte:** [Fredoka — Google Fonts](https://fonts.google.com/specimen/Fredoka), via `next/font/google`.
 > **Plataformas:** navegador desktop e mobile, com interação por mouse, toque e teclado onde fizer sentido.
@@ -820,27 +820,88 @@ PRÓXIMA ETAPA:
 
 **Tarefas**
 
-- [ ] Implementar `GameEngine` com estado de partida, entidades e atualização por passo fixo.
-- [ ] Implementar `PathSystem`, expandindo waypoints em células consecutivas e centros em coordenadas do mundo.
-- [ ] Criar entidade `Enemy` com posição, movimento, progresso, vida, tipo e animação.
-- [ ] Criar `SpriteAnimator` com recortes de spritesheets baseados no manifesto, incluindo suporte a 4 e 8 quadros.
-- [ ] Usar Normal Slime como primeiro inimigo de teste.
-- [ ] Fazer o inimigo entrar no primeiro waypoint, avançar pelos segmentos e desaparecer no castelo.
-- [ ] Ao escapar, descontar a vida correspondente **apenas uma vez**.
-- [ ] Integrar a engine ao Canvas por meio de controller/hook, com ciclo de montagem e desmontagem seguro.
-- [ ] Implementar pausa/resume para a simulação e pausa automática ao ocultar a página.
-- [ ] Criar testes unitários de caminho, avanço por delta e evento de chegada ao castelo.
+- [x] Implementar `GameEngine` com estado de partida, entidades e atualização por passo fixo.
+- [x] Implementar `PathSystem`, expandindo waypoints em células consecutivas e centros em coordenadas do mundo.
+- [x] Criar entidade `Enemy` com posição, movimento, progresso, vida, tipo e animação.
+- [x] Criar `SpriteAnimator` com recortes de spritesheets baseados no manifesto, incluindo suporte a 4 e 8 quadros.
+- [x] Usar Normal Slime como primeiro inimigo de teste.
+- [x] Fazer o inimigo entrar no primeiro waypoint, avançar pelos segmentos e desaparecer no castelo.
+- [x] Ao escapar, descontar a vida correspondente **apenas uma vez**.
+- [x] Integrar a engine ao Canvas por meio de controller/hook, com ciclo de montagem e desmontagem seguro.
+- [x] Implementar pausa/resume para a simulação e pausa automática ao ocultar a página.
+- [x] Criar testes unitários de caminho, avanço por delta e evento de chegada ao castelo.
 
 **Aceite**
 
-- [ ] Slime se move continuamente e acompanha corretamente todas as curvas.
-- [ ] A animação do Slime reproduz frames válidos sem mostrar partes erradas do atlas.
-- [ ] Pausar congela movimento e animação baseada na simulação; retomar não teleporta unidades.
-- [ ] Chegada ao castelo reduz exatamente a quantidade esperada de vidas.
-- [ ] Reiniciar/navegar não cria múltiplos loops.
-- [ ] Testes relevantes, lint e build passam.
+- [x] Slime se move continuamente e acompanha corretamente todas as curvas.
+- [x] A animação do Slime reproduz frames válidos sem mostrar partes erradas do atlas.
+- [x] Pausar congela movimento e animação baseada na simulação; retomar não teleporta unidades.
+- [x] Chegada ao castelo reduz exatamente a quantidade esperada de vidas.
+- [x] Reiniciar/navegar não cria múltiplos loops.
+- [x] Testes relevantes, lint e build passam.
 
 **Dependência:** Etapa 04.
+
+```text
+ETAPA CONCLUÍDA: 05 — Engine, estado da partida e movimentação de inimigos
+IMPLEMENTADO:
+- `GameEngine` (TS puro): fonte única de fase, pausa, vidas, ouro, onda e inimigos; passo fixo de
+  1/60 s com acumulador, delta real limitado a 100 ms e no máximo 16 passos por quadro. Comandos
+  `startWave`, `pause`, `resume`, `restart` validam pré-condições e retornam `{ ok } | { ok, reason }`.
+  Snapshot imutável publicado só quando algo visível muda (spawn, escape, fase, pausa), lido via
+  `useSyncExternalStore`.
+- Onda: fila de spawn por grupo (`data/waves.ts`, hoje só a onda 1 = 6 Normal Slimes, 1,1 s de
+  intervalo); conclusão só com fila vazia E campo vazio; derrota (vidas 0) cancela spawns e tem
+  precedência; após a onda volta a `preparing`. Ondas 2–10 recusadas com motivo até a Etapa 09.
+- `PathSystem`: `createWorldPath` (centros das células, entrada uma célula fora da borda esquerda,
+  saída na borda da célula do portão, só cantos guardados; 584 unidades) e `positionAt`.
+- `Enemy` (`entities/Enemy.ts`, tipos em `types/entities.ts`, dados em `data/enemies.ts`):
+  distância, posição, vida, velocidade, idade de simulação. Escape desconta `castleDamage` uma vez
+  e remove o inimigo (lista reconstruída, sem mutação durante a iteração).
+- `SpriteAnimator.frameAt`: quadro pelo nº de quadros do manifesto (4 ou 8), usando a idade de
+  simulação do inimigo — a animação congela com a pausa.
+- `GameRenderer`: desenha os inimigos antes do castelo (somem atrás do portão).
+- `useGameController`: uma engine por montagem; pausa automática em `visibilitychange` (oculta),
+  `blur` e `pagehide` durante a onda, e também quando `/play` é escondida. Com `cacheComponents`,
+  o Next 16 esconde a rota com `<Activity>` em vez de desmontá-la: a partida é preservada e volta
+  pausada. Retomada sempre explícita.
+- Laço único: o RAF do `GameCanvas` avança a engine e desenha; é cancelado na limpeza do efeito
+  (inclusive ao esconder a rota).
+- UI: "Iniciar onda" e Pausar/Retomar ligados à engine (desativados até os sprites carregarem);
+  recusas da engine aparecem no aviso; `PauseOverlay` sobre o mapa com "Retomar". 1×/2× segue
+  desativado (Etapa 10).
+- Vitest + script `npm test`; `@types/node` subiu de ^20 para ^24 (exigência de peer do Vitest 5,
+  igual ao Node 24 em uso). `engine/snapshot.ts` removido (substituído pelo snapshot da engine).
+ARQUIVOS PRINCIPAIS:
+- src/game/engine/GameEngine.ts, SpriteAnimator.ts, GameRenderer.ts
+- src/game/systems/PathSystem.ts, src/game/entities/Enemy.ts
+- src/game/data/enemies.ts, waves.ts, src/game/types/entities.ts, src/game/config/constants.ts
+- src/hooks/useGameController.ts, src/components/game/GameCanvas.tsx, PauseOverlay.tsx,
+  WaveControls.tsx, src/components/layout/GameShell.tsx
+- src/tests/unit/path.test.ts, engine.test.ts, vitest.config.mts, package.json, README.md
+VALIDAÇÃO:
+- npm test: 20/20 (expansão sem cantos duplicados, comprimento/cantos/interpolação, todo ponto
+  do percurso em célula de caminho, spawn escalonado, avanço = velocidade × delta, escape tira
+  1 vida uma única vez, onda 1 = −6 vidas, sem fim antecipado entre spawns, derrota cancela
+  spawns, recusa de onda em andamento/inexistente, pausa congela posição e animação, delta
+  limitado, acumulador sem perda, restart, publicação só em mudanças).
+- npm run lint, npm run typecheck, npm run build: ok.
+- Edge headless (CDP, `next start`, 1366×768): canvas idêntico em preparação e durante 2,5 s de
+  pausa; muda após retomar sem salto visível; pausa automática ao ocultar e ao perder foco; onda 1
+  completa = Vidas 20 → 14 e volta à preparação; nova onda recusada com motivo; 60 RAF/s na partida,
+  0 no menu e 61 ao voltar (sem laço duplicado); sair no meio da onda e voltar = partida pausada;
+  sem erros de console. Capturas: slimes nos centros da estrada, inclusive nas curvas.
+- Observação de teste: o Edge headless no Windows marca a página como oculta após ~5 s (janela
+  "ocluída"), o que dispara corretamente a pausa automática; os testes usam
+  `--disable-backgrounding-occluded-windows` e emulação de foco.
+PENDÊNCIAS / RISCOS:
+- Voltar ao menu e tocar "Jogar" retoma a mesma partida (pausada), por causa do `<Activity>`.
+  Se preferir sempre uma partida nova, resetar com `restart()` ao reexibir a rota (decisão de UX).
+- `restart()` existe na engine mas ainda não tem botão (GameOverDialog na Etapa 09).
+- Ouro e bônus de onda ainda não mudam (Etapas 07 e 09); 1×/2× fica para a Etapa 10.
+PRÓXIMA ETAPA:
+- Etapa 06 — Construção, seleção e economia.
+```
 
 ---
 
@@ -1196,7 +1257,7 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 02 — Design system e menu | Concluída | Pixel UI 9-slice, menu com cenário animado, Como jogar, /creditos, /play provisório |
 | 03 — HUD responsivo | Concluída | GameShell, HUD, seletor, detalhes, controles desativados com motivo, canvas responsivo + ponteiro, loader |
 | 04 — Canvas e mapa | Concluída | Atlas de estrada por conexões, camada estática, castelo animado, caminho ajustado (col. 15 → portão em 18,7) |
-| 05 — Engine e movimento | Pendente | — |
+| 05 — Engine e movimento | Concluída | Engine passo fixo, onda 1 de teste, pausa/auto-pausa, laço único, Vitest 20 testes |
 | 06 — Construção e economia | Pendente | — |
 | 07 — Combate | Pendente | — |
 | 08 — Upgrades e venda | Pendente | — |
@@ -1204,5 +1265,5 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 10 — Mobile e controles | Pendente | — |
 | 11 — Persistência e entrega | Pendente | — |
 
-**Ponto de retomada atual:** Etapa 05 — Engine, estado da partida e movimentação de inimigos.
+**Ponto de retomada atual:** Etapa 06 — Construção, seleção e economia.
 

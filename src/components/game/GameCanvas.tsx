@@ -3,6 +3,7 @@
 import { useEffect, useRef, type PointerEvent } from "react";
 import { WORLD_HEIGHT, WORLD_WIDTH } from "@/game/config/constants";
 import type { LevelDefinition } from "@/game/data/levels";
+import type { GameEngine } from "@/game/engine/GameEngine";
 import { GameRenderer } from "@/game/engine/GameRenderer";
 import type { MapLayout } from "@/game/systems/MapLayout";
 import type { GridPosition } from "@/game/types/game";
@@ -11,17 +12,17 @@ import { screenToWorld, worldToCell } from "@/game/utils/geometry";
 type GameCanvasProps = {
   /** Sprites já carregados; `null` enquanto a cena carrega. */
   images: ReadonlyMap<string, HTMLImageElement> | null;
+  engine: GameEngine;
   level: LevelDefinition;
   layout: MapLayout;
 };
 
 /**
  * Canvas do mapa com proporção lógica 320:192. Mantém a resolução interna igual ao tamanho
- * CSS × `devicePixelRatio`, converte mouse/toque em células e delega o desenho ao `GameRenderer`.
- *
- * O laço de quadros daqui só desenha; na Etapa 05 ele passa a ser o laço único da engine.
+ * CSS × `devicePixelRatio`, converte mouse/toque em células e roda o laço único do jogo:
+ * a cada quadro, avança a engine pelo tempo real decorrido e desenha o estado com o `GameRenderer`.
  */
-export function GameCanvas({ images, level, layout }: GameCanvasProps) {
+export function GameCanvas({ images, engine, level, layout }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pointerCell = useRef<GridPosition | null>(null);
 
@@ -49,9 +50,17 @@ export function GameCanvas({ images, level, layout }: GameCanvasProps) {
     window.addEventListener("resize", resize);
     resize();
 
+    const scene = { enemies: engine.getEnemies() };
+    let lastTime: number | null = null;
     let frameId = requestAnimationFrame(function frame(time) {
+      // A engine limita o delta: voltar de uma aba inativa não teletransporta unidades.
+      if (lastTime !== null) engine.advance((time - lastTime) / 1000);
+      lastTime = time;
+
+      scene.enemies = engine.getEnemies();
       renderer.render(
         time,
+        scene,
         { pointerCell: pointerCell.current },
         { reducedMotion: motionQuery.matches },
       );
@@ -64,7 +73,7 @@ export function GameCanvas({ images, level, layout }: GameCanvasProps) {
       window.removeEventListener("resize", resize);
       renderer.destroy();
     };
-  }, [images, level, layout]);
+  }, [images, engine, level, layout]);
 
   const setPointerCell = (canvas: HTMLCanvasElement, cell: GridPosition | null) => {
     pointerCell.current = cell;

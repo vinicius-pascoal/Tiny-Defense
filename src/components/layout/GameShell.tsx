@@ -1,19 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { FeedbackToast } from "@/components/game/FeedbackToast";
 import { GameCanvas } from "@/components/game/GameCanvas";
 import { GameHUD } from "@/components/game/GameHUD";
+import { PauseOverlay } from "@/components/game/PauseOverlay";
 import { SceneLoading } from "@/components/game/SceneLoading";
 import { TowerDetails } from "@/components/game/TowerDetails";
 import { TowerSelector } from "@/components/game/TowerSelector";
 import { WaveControls } from "@/components/game/WaveControls";
 import { PixelPanel } from "@/components/ui/PixelPanel";
 import { LEVEL_1 } from "@/game/data/levels";
+import type { CommandResult } from "@/game/engine/GameEngine";
 import { getLevelSprites } from "@/game/engine/GameRenderer";
-import { createInitialSnapshot } from "@/game/engine/snapshot";
 import { createMapLayout } from "@/game/systems/MapLayout";
 import { useFeedback } from "@/hooks/useFeedback";
+import { useGameController } from "@/hooks/useGameController";
 import { useSpriteLoader } from "@/hooks/useSpriteLoader";
 import { GAME_SCENE_SPRITES } from "@/lib/assets";
 
@@ -25,14 +26,20 @@ const SCENE_SPRITES = [...new Set([...GAME_SCENE_SPRITES, ...getLevelSprites(LEV
 /**
  * Tela da partida. Desktop: HUD no topo, mapa ao centro e painel lateral.
  * Mobile: HUD compacto, mapa na largura total e painéis abaixo, com rolagem vertical.
- *
- * O snapshot ainda é o estado inicial fixo; a engine passa a publicá-lo na Etapa 05.
  */
 export function GameShell() {
-  const [snapshot] = useState(createInitialSnapshot);
+  const { engine, snapshot } = useGameController(LAYOUT);
   const { state: loadState, retry } = useSpriteLoader(SCENE_SPRITES);
   const { message, notify } = useFeedback();
   const warn = (reason: string) => notify(reason, "warning");
+  const ready = loadState.status === "ready";
+
+  /** Executa um comando da engine e mostra o motivo quando ela o recusa. */
+  const run = (command: () => CommandResult) => {
+    const result = command();
+    if (!result.ok) warn(result.reason);
+  };
+  const togglePause = () => run(() => (snapshot.paused ? engine.resume() : engine.pause()));
 
   return (
     <div className="flex min-h-dvh flex-col lg:h-dvh">
@@ -42,11 +49,13 @@ export function GameShell() {
         <main className="game-stage-area flex min-w-0 flex-col items-center lg:flex-1 lg:justify-center">
           <PixelPanel skin="slot" className="game-stage relative">
             <GameCanvas
-              images={loadState.status === "ready" ? loadState.images : null}
+              images={ready ? loadState.images : null}
+              engine={engine}
               level={LEVEL}
               layout={LAYOUT}
             />
-            {loadState.status !== "ready" && <SceneLoading state={loadState} onRetry={retry} />}
+            {!ready && <SceneLoading state={loadState} onRetry={retry} />}
+            {ready && snapshot.paused && <PauseOverlay onResume={togglePause} />}
             <FeedbackToast message={message} />
           </PixelPanel>
         </main>
@@ -55,7 +64,13 @@ export function GameShell() {
           aria-label="Controles da partida"
           className="flex flex-col gap-3 lg:w-96 lg:shrink-0 lg:overflow-y-auto"
         >
-          <WaveControls snapshot={snapshot} onUnavailable={warn} />
+          <WaveControls
+            snapshot={snapshot}
+            // Sem sprites prontos o laço não roda: comandos de tempo ficam desativados.
+            onStartWave={ready ? () => run(() => engine.startWave()) : undefined}
+            onTogglePause={ready ? togglePause : undefined}
+            onUnavailable={warn}
+          />
           <TowerSelector snapshot={snapshot} onUnavailable={warn} />
           <TowerDetails snapshot={snapshot} />
         </aside>

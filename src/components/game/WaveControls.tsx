@@ -36,9 +36,13 @@ export function WaveControls({
       : currentWave >= totalWaves
         ? "Não há mais ondas."
         : !onStartWave
-          ? "O início das ondas ainda não está disponível."
+          ? "Aguarde o mapa ficar pronto."
           : null;
-  const pauseReason = !onTogglePause ? "A pausa ainda não está disponível." : null;
+  const pauseReason = !onTogglePause
+    ? "Aguarde o mapa ficar pronto."
+    : phase === "victory" || phase === "defeat"
+      ? "A partida terminou."
+      : null;
   const speedReason = !onToggleSpeed ? "A troca de velocidade ainda não está disponível." : null;
 
   return (

@@ -1,9 +1,17 @@
 import { TILE_SIZE, WORLD_HEIGHT, WORLD_WIDTH } from "@/game/config/constants";
 import type { LevelDefinition } from "@/game/data/levels";
+import { ENEMIES } from "@/game/data/enemies";
 import type { MapLayout, PathTile } from "@/game/systems/MapLayout";
+import type { Enemy } from "@/game/types/entities";
 import type { GridPosition } from "@/game/types/game";
 import { GRASS_SPRITES, TILESET_SPRITES } from "@/lib/assets";
 import { getFrameRect, getSpriteInfo, type SpriteKey } from "@/lib/spriteManifest";
+import { frameAt } from "./SpriteAnimator";
+
+/** Entidades da simulação, somente leitura (fornecidas pela engine). */
+export type RenderScene = {
+  enemies: readonly Enemy[];
+};
 
 /** Estado contextual desenhado por cima do mapa (preenchido pela interface). */
 export type RenderOverlay = {
@@ -44,6 +52,7 @@ export function getLevelSprites(level: LevelDefinition): string[] {
     TILESET_SPRITES.ground,
     TILESET_SPRITES.stone,
     getSpriteInfo(level.castle.sprite).src,
+    ...Object.values(ENEMIES).map((enemy) => getSpriteInfo(enemy.sprite).src),
     ...level.decorations.map((decoration) => getSpriteInfo(decoration.sprite).src),
   ];
 }
@@ -81,7 +90,7 @@ export class GameRenderer {
     }
   }
 
-  render(timeMs: number, overlay: RenderOverlay, options: RenderOptions) {
+  render(timeMs: number, scene: RenderScene, overlay: RenderOverlay, options: RenderOptions) {
     const { ctx, canvas } = this;
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -91,6 +100,9 @@ export class GameRenderer {
     // A partir daqui, tudo é desenhado em unidades do mundo lógico.
     ctx.setTransform(canvas.width / WORLD_WIDTH, 0, 0, canvas.height / WORLD_HEIGHT, 0, 0);
     ctx.imageSmoothingEnabled = false;
+
+    // Unidades antes do castelo: ao chegar ao fim do caminho, o inimigo some atrás do portão.
+    for (const enemy of scene.enemies) this.drawEnemy(enemy);
 
     const castleFrame = options.reducedMotion ? 0 : timeMs / CASTLE_FRAME_MS;
     this.drawSprite(this.level.castle.sprite, this.level.castle.x, this.level.castle.y, castleFrame);
@@ -117,6 +129,17 @@ export class GameRenderer {
 
     const { sx, sy, sw, sh } = getFrameRect(info, frame);
     ctx.drawImage(image, sx, sy, sw, sh, Math.round(x), Math.round(y), sw, sh);
+  }
+
+  /** Inimigo centrado na estrada, com a base levemente abaixo do centro da célula. */
+  private drawEnemy(enemy: Enemy) {
+    const definition = ENEMIES[enemy.type];
+    const info = getSpriteInfo(definition.sprite);
+    // A animação usa o tempo de simulação do inimigo: congela junto com a pausa.
+    const frame = frameAt(info, enemy.age, definition.animationFps);
+    const x = enemy.position.x - info.frameWidth / 2;
+    const y = enemy.position.y + 3 - info.frameHeight;
+    this.drawSprite(definition.sprite, x, y, frame);
   }
 
   private buildStaticLayer(): HTMLCanvasElement {
