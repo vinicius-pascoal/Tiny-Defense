@@ -59,7 +59,14 @@ export function GameCanvas({ images, engine, level, layout, onCellTap }: GameCan
     window.addEventListener("resize", resize);
     resize();
 
-    const scene: RenderScene = { enemies: [], towers: [], selectedTowerId: null, buildPreview: null };
+    const scene: RenderScene = {
+      enemies: [],
+      towers: [],
+      projectiles: [],
+      effects: [],
+      selectedTowerId: null,
+      buildPreview: null,
+    };
     let lastBuildType: TowerType | null = null;
     let lastTime: number | null = null;
     let frameId = requestAnimationFrame(function frame(time) {
@@ -77,6 +84,8 @@ export function GameCanvas({ images, engine, level, layout, onCellTap }: GameCan
       const cell = pointerCell.current;
       scene.enemies = engine.getEnemies();
       scene.towers = engine.getTowers();
+      scene.projectiles = engine.getProjectiles();
+      scene.effects = engine.getEffects();
       scene.selectedTowerId = selectedTowerId;
       scene.buildPreview =
         selectedBuildType && cell

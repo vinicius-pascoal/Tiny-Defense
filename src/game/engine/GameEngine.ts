@@ -5,10 +5,11 @@ import { TOWERS } from "@/game/data/towers";
 import { WAVES, type WaveDefinition } from "@/game/data/waves";
 import { advanceEnemy, createEnemy } from "@/game/entities/Enemy";
 import { createTower } from "@/game/entities/Tower";
+import { updateProjectiles, updateTowers, type CombatHooks } from "@/game/systems/CombatSystem";
 import type { MapLayout } from "@/game/systems/MapLayout";
 import { createWorldPath, type WorldPath } from "@/game/systems/PathSystem";
 import { cellKey, checkPlacement, type PlacementCheck } from "@/game/systems/PlacementSystem";
-import type { Enemy, EnemyType, Tower } from "@/game/types/entities";
+import type { Enemy, EnemyType, Projectile, Tower, VisualEffect } from "@/game/types/entities";
 import type {
   GamePhase,
   GameSnapshot,
@@ -58,6 +59,21 @@ export class GameEngine {
   private selectedBuildType: TowerType | null = null;
   private selectedTowerId: string | null = null;
 
+  private projectiles: Projectile[] = [];
+  private effects: VisualEffect[] = [];
+  private nextProjectileId = 1;
+  /** Marca mudanças visíveis no HUD durante um passo (ex.: ouro de uma morte). */
+  private dirty = false;
+
+  private readonly combatHooks: CombatHooks = {
+    onKill: (enemy) => {
+      this.gold += ENEMIES[enemy.type].reward;
+      this.dirty = true;
+    },
+    onEffect: (effect) => this.effects.push({ ...effect, age: 0 }),
+    nextProjectileId: () => `projectile-${this.nextProjectileId++}`,
+  };
+
   private snapshot: GameSnapshot;
   private readonly listeners = new Set<() => void>();
 
@@ -86,6 +102,16 @@ export class GameEngine {
   /** Torres construídas, somente para leitura (renderer). */
   getTowers(): readonly Tower[] {
     return this.towers;
+  }
+
+  /** Projéteis em voo, somente para leitura (renderer). */
+  getProjectiles(): readonly Projectile[] {
+    return this.projectiles;
+  }
+
+  /** Efeitos visuais ativos, somente para leitura (renderer). */
+  getEffects(): readonly VisualEffect[] {
+    return this.effects;
   }
 
   getTowerAt(cell: GridPosition): Tower | null {
@@ -133,39 +159,55 @@ export class GameEngine {
   /** Um passo da simulação. Público para testes determinísticos. */
   step(dt: number) {
     if (this.paused || this.phase !== "running") return;
-    let changed = false;
+    this.dirty = false;
 
+    // 1. Geração.
     this.waveTime += dt;
     while (this.spawnQueue.length > 0 && this.spawnQueue[0].time <= this.waveTime) {
       const event = this.spawnQueue.shift()!;
       this.enemies.push(createEnemy(`enemy-${this.nextEnemyId++}`, event.enemy, this.path));
-      changed = true;
+      this.dirty = true;
     }
 
-    // Movimento e escapes; a lista é reconstruída em vez de mutada durante a iteração.
+    // 2. Movimento e escapes. Quem escapa sai da lista antes do combate: não é mais atacado.
     const remaining: Enemy[] = [];
     for (const enemy of this.enemies) {
       if (advanceEnemy(enemy, dt, this.path)) {
+        enemy.state = "escaped";
         this.lives = Math.max(this.lives - ENEMIES[enemy.type].castleDamage, 0);
-        changed = true;
+        this.dirty = true;
       } else {
         remaining.push(enemy);
       }
     }
     this.enemies = remaining;
 
+    // 3. Combate: torres disparam e projéteis atingem. Mortes pagam a recompensa uma única vez.
+    updateTowers(this.towers, this.enemies, dt, this.projectiles, this.combatHooks);
+    this.projectiles = updateProjectiles(this.projectiles, this.enemies, dt, this.combatHooks);
+    this.enemies = this.enemies.filter((enemy) => enemy.state === "alive");
+
+    // 4. Efeitos visuais envelhecem no tempo de simulação (congelam na pausa).
+    for (const effect of this.effects) effect.age += dt;
+    this.effects = this.effects.filter((effect) => effect.age < effect.duration);
+
+    // 5. Fim de onda ou de partida.
     if (this.lives <= 0) {
       // Derrota tem precedência: cancela gerações pendentes e congela a partida.
       this.phase = "defeat";
       this.spawnQueue = [];
-      changed = true;
+      this.projectiles = [];
+      this.dirty = true;
     } else if (this.spawnQueue.length === 0 && this.enemies.length === 0) {
       // Só conclui com todos os grupos gerados e o campo vazio (ROADMAP §6.4, regra 4).
       this.phase = this.currentWave >= TOTAL_WAVES ? "victory" : "preparing";
-      changed = true;
+      // Sem alvos, projéteis restantes não têm efeito; não ficam parados no ar entre ondas.
+      this.projectiles = [];
+      this.effects = [];
+      this.dirty = true;
     }
 
-    if (changed) this.publish();
+    if (this.dirty) this.publish();
   }
 
   // --- Comandos ------------------------------------------------------------------------------
@@ -276,6 +318,8 @@ export class GameEngine {
     this.occupancy = new Map();
     this.selectedBuildType = null;
     this.selectedTowerId = null;
+    this.projectiles = [];
+    this.effects = [];
     this.publish();
     return OK;
   }

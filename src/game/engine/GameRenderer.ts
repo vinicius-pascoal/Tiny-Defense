@@ -3,7 +3,7 @@ import type { LevelDefinition } from "@/game/data/levels";
 import { ENEMIES } from "@/game/data/enemies";
 import { TOWERS } from "@/game/data/towers";
 import type { MapLayout, PathTile } from "@/game/systems/MapLayout";
-import type { Enemy, Tower } from "@/game/types/entities";
+import type { Enemy, Projectile, Tower, VisualEffect } from "@/game/types/entities";
 import type { GridPosition, TowerType } from "@/game/types/game";
 import { GRASS_SPRITES, TILESET_SPRITES } from "@/lib/assets";
 import { getFrameRect, getSpriteInfo, type SpriteKey } from "@/lib/spriteManifest";
@@ -16,6 +16,8 @@ export type BuildPreview = { type: TowerType; cell: GridPosition; valid: boolean
 export type RenderScene = {
   enemies: readonly Enemy[];
   towers: readonly Tower[];
+  projectiles: readonly Projectile[];
+  effects: readonly VisualEffect[];
   selectedTowerId: string | null;
   buildPreview: BuildPreview | null;
 };
@@ -37,6 +39,18 @@ const COLORS = {
   selectedRange: "rgb(244 197 66 / 0.12)",
   pointer: "rgb(251 243 223 / 0.25)",
   pointerStroke: "#fbf3df",
+  healthBack: "#2b1d12",
+  health: "#b9d97a",
+  healthLow: "#c8443a",
+  frost: "rgb(159 216 240 / 0.75)",
+};
+
+/** Cor e opacidade máxima de cada efeito procedural (apoio visual; não substitui sprites). */
+const EFFECT_STYLE: Record<VisualEffect["kind"], { fill: string; stroke: string }> = {
+  hit: { fill: "rgb(251 243 223 / 0.9)", stroke: "rgb(251 243 223 / 0.9)" },
+  explosion: { fill: "rgb(244 197 66 / 0.35)", stroke: "rgb(201 143 28 / 0.9)" },
+  frost: { fill: "rgb(159 216 240 / 0.45)", stroke: "rgb(58 139 189 / 0.9)" },
+  death: { fill: "rgb(251 243 223 / 0.5)", stroke: "rgb(251 243 223 / 0)" },
 };
 
 /** Estado contextual desenhado por cima do mapa (preenchido pela interface). */
@@ -80,6 +94,7 @@ export function getLevelSprites(level: LevelDefinition): string[] {
     getSpriteInfo(level.castle.sprite).src,
     ...Object.values(ENEMIES).map((enemy) => getSpriteInfo(enemy.sprite).src),
     ...Object.values(TOWERS).map((tower) => getSpriteInfo(tower.sprite).src),
+    ...Object.values(TOWERS).map((tower) => getSpriteInfo(tower.projectile.sprite).src),
     ...level.decorations.map((decoration) => getSpriteInfo(decoration.sprite).src),
   ];
 }
@@ -148,6 +163,11 @@ export class GameRenderer {
       else this.drawSprite(castle.sprite, castle.x, castle.y, castleFrame);
     }
 
+    // Efeitos: projéteis, impactos e barras de vida acima das unidades.
+    for (const projectile of scene.projectiles) this.drawProjectile(projectile);
+    for (const effect of scene.effects) this.drawEffect(effect);
+    for (const enemy of scene.enemies) this.drawHealthBar(enemy);
+
     // Elementos contextuais por último.
     const selected = scene.selectedTowerId
       ? scene.towers.find((tower) => tower.id === scene.selectedTowerId)
@@ -187,7 +207,69 @@ export class GameRenderer {
     const frame = frameAt(info, enemy.age, definition.animationFps);
     const x = enemy.position.x - info.frameWidth / 2;
     const y = enemy.position.y + 3 - info.frameHeight;
+
+    // Lentidão: anel de gelo aos pés do inimigo (o sprite continua o original).
+    if (enemy.slowTimer > 0) {
+      const { ctx } = this;
+      ctx.beginPath();
+      ctx.ellipse(enemy.position.x, enemy.position.y + 3, info.frameWidth / 2 + 1, 2, 0, 0, Math.PI * 2);
+      ctx.fillStyle = COLORS.frost;
+      ctx.fill();
+    }
     this.drawSprite(definition.sprite, x, y, frame);
+  }
+
+  /** Barra discreta acima do inimigo, só depois de sofrer dano. */
+  private drawHealthBar(enemy: Enemy) {
+    if (enemy.health >= enemy.maxHealth) return;
+    const { ctx } = this;
+    const info = getSpriteInfo(ENEMIES[enemy.type].sprite);
+    const width = Math.max(info.frameWidth, 10);
+    const x = Math.round(enemy.position.x - width / 2);
+    const y = Math.round(enemy.position.y + 3 - info.frameHeight - 3);
+    const ratio = enemy.health / enemy.maxHealth;
+
+    ctx.fillStyle = COLORS.healthBack;
+    ctx.fillRect(x - 0.5, y - 0.5, width + 1, 2);
+    ctx.fillStyle = ratio > 0.35 ? COLORS.health : COLORS.healthLow;
+    ctx.fillRect(x, y, Math.max(width * ratio, 0.5), 1);
+  }
+
+  private drawProjectile(projectile: Projectile) {
+    const { sprite, oriented } = TOWERS[projectile.towerType].projectile;
+    const info = getSpriteInfo(sprite);
+    const image = this.image(info.src);
+    if (!image) return;
+
+    const { ctx } = this;
+    const { x, y } = projectile.position;
+    if (oriented) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(projectile.angle);
+      ctx.drawImage(image, -info.frameWidth / 2, -info.frameHeight / 2);
+      ctx.restore();
+    } else {
+      ctx.drawImage(image, Math.round(x - info.frameWidth / 2), Math.round(y - info.frameHeight / 2));
+    }
+  }
+
+  /** Círculo que cresce e some; a explosão mostra o raio real da área atingida. */
+  private drawEffect(effect: VisualEffect) {
+    const { ctx } = this;
+    const t = Math.min(effect.age / effect.duration, 1);
+    const style = EFFECT_STYLE[effect.kind];
+    const radius = effect.kind === "explosion" ? effect.radius * (0.5 + 0.5 * t) : effect.radius * (0.4 + 0.6 * t);
+
+    ctx.globalAlpha = 1 - t;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = style.fill;
+    ctx.fill();
+    ctx.strokeStyle = style.stroke;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
   }
 
   /** Torre centrada na célula e apoiada na base dela, sem esticar (sprites de 16–18 px). */

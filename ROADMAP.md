@@ -2,7 +2,7 @@
 
 > **Documento de execução para um agente de programação (Codex ou equivalente).**
 >
-> **Status:** Etapas 01–06 concluídas; próxima: Etapa 07.
+> **Status:** Etapas 01–07 concluídas; próxima: Etapa 08.
 > **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + React + Canvas 2D.
 > **Fonte:** [Fredoka — Google Fonts](https://fonts.google.com/specimen/Fredoka), via `next/font/google`.
 > **Plataformas:** navegador desktop e mobile, com interação por mouse, toque e teclado onde fizer sentido.
@@ -993,29 +993,74 @@ PRÓXIMA ETAPA:
 
 **Tarefas**
 
-- [ ] Implementar `CombatSystem`: detecção de alvo dentro do raio, priorização por progresso e cooldown.
-- [ ] Implementar entidade `Projectile` com posição, velocidade, alvo/destino e efeito na colisão.
-- [ ] Renderizar os PNGs de projéteis associados a cada torre.
-- [ ] Implementar Archer: dano individual e maior frequência de ataque.
-- [ ] Implementar Cannon: intervalo mais lento, dano elevado e explosão em área.
-- [ ] Implementar Ice Wizard: dano moderado e aplicação de slow com duração configurada.
-- [ ] Implementar morte, remoção, barra de vida e recompensa em ouro por inimigo eliminado.
-- [ ] Impedir dano e recompensa duplicados em mortes simultâneas por múltiplos projéteis.
-- [ ] Ajustar ordem de eventos para não ocorrer ataque a inimigo que já escapou.
-- [ ] Testar com múltiplos inimigos e múltiplas torres simultaneamente.
-- [ ] Adicionar efeitos visuais discretos para acerto, explosão e gelo sem substituir sprites.
+- [x] Implementar `CombatSystem`: detecção de alvo dentro do raio, priorização por progresso e cooldown.
+- [x] Implementar entidade `Projectile` com posição, velocidade, alvo/destino e efeito na colisão.
+- [x] Renderizar os PNGs de projéteis associados a cada torre.
+- [x] Implementar Archer: dano individual e maior frequência de ataque.
+- [x] Implementar Cannon: intervalo mais lento, dano elevado e explosão em área.
+- [x] Implementar Ice Wizard: dano moderado e aplicação de slow com duração configurada.
+- [x] Implementar morte, remoção, barra de vida e recompensa em ouro por inimigo eliminado.
+- [x] Impedir dano e recompensa duplicados em mortes simultâneas por múltiplos projéteis.
+- [x] Ajustar ordem de eventos para não ocorrer ataque a inimigo que já escapou.
+- [x] Testar com múltiplos inimigos e múltiplas torres simultaneamente.
+- [x] Adicionar efeitos visuais discretos para acerto, explosão e gelo sem substituir sprites.
 
 **Aceite**
 
-- [ ] Archer causa dano em apenas um alvo por projétil.
-- [ ] Cannon pode danificar mais de um inimigo na mesma explosão, uma vez por alvo.
-- [ ] Ice reduz temporariamente a velocidade e o efeito expira corretamente.
-- [ ] Inimigos morrem ao atingir 0 de HP e desaparecem.
-- [ ] Mortes concedem recompensa exatamente uma vez; escapes não concedem recompensa.
-- [ ] Sem erros no console com dezenas de projéteis/inimigos simultâneos.
-- [ ] Testes de dano, área, slow, alvo e morte passam.
+- [x] Archer causa dano em apenas um alvo por projétil.
+- [x] Cannon pode danificar mais de um inimigo na mesma explosão, uma vez por alvo.
+- [x] Ice reduz temporariamente a velocidade e o efeito expira corretamente.
+- [x] Inimigos morrem ao atingir 0 de HP e desaparecem.
+- [x] Mortes concedem recompensa exatamente uma vez; escapes não concedem recompensa.
+- [x] Sem erros no console com dezenas de projéteis/inimigos simultâneos.
+- [x] Testes de dano, área, slow, alvo e morte passam.
 
 **Dependência:** Etapa 06.
+
+```text
+ETAPA CONCLUÍDA: 07 — Combate, projéteis e efeitos das três torres
+IMPLEMENTADO:
+- `data/towers.ts`: efeito por torre (Archer alvo único; Cannon área raio 24; Ice lentidão 40% por
+  1,7 s), sprite/velocidade do projétil e altura de disparo.
+- `CombatSystem` (puro): `selectTarget` (vivo, no alcance, mais avançado no caminho),
+  `updateTowers` (recarga em tempo de simulação; dispara ao surgir alvo), `updateProjectiles`
+  (perseguem o alvo vivo; alvo único some se o alvo morre/escapa; o canhão explode no último destino),
+  `damageEnemy` (único ponto de dano: ignora NaN/negativo/zero e mortos; a morte e a recompensa
+  acontecem uma vez). Área: alvos coletados antes do dano, um acerto por inimigo. Lentidão não
+  acumula: mantém 40% e só renova a duração; ao expirar a velocidade volta ao normal.
+- `Enemy`: estado `alive | dead | escaped`, lentidão (`slowFactor`, `slowTimer`) e `currentSpeed`.
+  `Tower`: `cooldown`. Tipos `Projectile` e `VisualEffect`.
+- Engine, ordem do passo: geração → movimento/escape (quem escapa sai antes do combate) → torres →
+  projéteis → remoção dos mortos → efeitos → fim de onda/derrota. Ouro da recompensa publicado no
+  snapshot. Fim de onda/derrota limpa projéteis (e efeitos) para não ficarem parados no ar.
+- Renderer: PNGs dos projéteis (flecha girada na direção do voo), barra de vida só após dano,
+  anel de gelo aos pés do inimigo lento e efeitos procedurais discretos (faísca no acerto, círculo
+  da explosão no raio real, gelo, sumiço na morte), que avançam no tempo de simulação.
+ARQUIVOS PRINCIPAIS:
+- src/game/systems/CombatSystem.ts, src/game/engine/GameEngine.ts, GameRenderer.ts
+- src/game/data/towers.ts, src/game/entities/Enemy.ts, Tower.ts, src/game/types/entities.ts
+- src/components/game/GameCanvas.tsx, src/tests/unit/combat.test.ts
+VALIDAÇÃO:
+- npm test: 49/49 (novos: dados das torres válidos; alvo mais avançado, ignora mortos/escapados e
+  fora do alcance; Archer um alvo; cadência 5 tiros em 4 s; T07 área uma vez por alvo e fora do raio
+  intacto; T08 lentidão sem acúmulo, renovada e expirando; T05 morte/recompensa uma vez; dano
+  inválido recusado; projétil some/explode quando o alvo morre; 40 inimigos × 5 torres sem NaN e
+  mortes contadas uma vez; integração: mortes + escapes = 6 e ouro fecha a conta; pausa congela
+  recarga e projéteis).
+- npm run lint, npm run typecheck, npm run build: ok.
+- Edge headless (CDP, `next start`, 1366×768): Archer + Ice Wizard contra a onda 1 = 6 mortes,
+  ouro 25 → 85, vidas 20, 61 FPS, sem erros. Carga temporária (build local com 2000 de ouro e 40
+  slimes, depois revertida): 8 torres, 40 mortes, ouro +400 exatos, 61 FPS, sem erros de console.
+- Observação de teste: no Windows, o Edge headless trata a janela invisível como "ocluída" e cai para
+  ~1 FPS depois de alguns segundos (acontece igual no build da Etapa 06; o JS do quadro leva
+  < 0,5 ms). Os testes usam `--disable-features=CalculateNativeWinOcclusion`.
+PENDÊNCIAS / RISCOS:
+- Balanceamento ainda não avaliado (Archer + Ice limpam a onda 1 sozinhos); ajustar na Etapa 11.
+- Melhorias alteram dano/alcance na Etapa 08 (o combate já lê os dados por tipo; precisará ler o nível).
+- Barra de vida sempre visível do chefe fica para a Etapa 09.
+PRÓXIMA ETAPA:
+- Etapa 08 — Melhorias, venda e painel contextual.
+```
 
 ---
 
@@ -1310,11 +1355,11 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 04 — Canvas e mapa | Concluída | Atlas de estrada por conexões, camada estática, castelo animado, caminho ajustado (col. 15 → portão em 18,7) |
 | 05 — Engine e movimento | Concluída | Engine passo fixo, onda 1 de teste, pausa/auto-pausa, laço único, Vitest 20 testes |
 | 06 — Construção e economia | Concluída | PlacementSystem, construção atômica, prévia válida/inválida, toque ≠ rolagem, seleção, 35 testes |
-| 07 — Combate | Pendente | — |
+| 07 — Combate | Concluída | CombatSystem puro, projéteis com sprite, área/lentidão, recompensa única, efeitos; 49 testes |
 | 08 — Upgrades e venda | Pendente | — |
 | 09 — Ondas e chefe | Pendente | — |
 | 10 — Mobile e controles | Pendente | — |
 | 11 — Persistência e entrega | Pendente | — |
 
-**Ponto de retomada atual:** Etapa 07 — Combate, projéteis e efeitos das três torres.
+**Ponto de retomada atual:** Etapa 08 — Melhorias, venda e painel contextual.
 
