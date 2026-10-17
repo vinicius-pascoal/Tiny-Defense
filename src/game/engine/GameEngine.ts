@@ -328,6 +328,21 @@ export class GameEngine {
     return OK;
   }
 
+  /**
+   * Multiplica o tempo de simulação (1× ou 2×). O passo continua fixo: 2× roda o dobro de passos
+   * por quadro, então movimento, gerações e recargas aceleram juntos, sem mudar a física relativa
+   * nem duplicar eventos. Pode ser trocada na preparação, em onda ou em pausa; não após o fim.
+   */
+  setSpeed(speed: SpeedMultiplier): CommandResult {
+    if (speed !== 1 && speed !== 2) return fail("Velocidade inválida.");
+    if (this.phase === "victory" || this.phase === "defeat") return fail("A partida terminou.");
+    if (this.speed === speed) return OK;
+    this.speed = speed;
+    this.accumulator = 0;
+    this.publish();
+    return OK;
+  }
+
   /** Restaura o estado inicial, descartando entidades e filas anteriores. */
   restart(): CommandResult {
     this.phase = "preparing";

@@ -2,7 +2,7 @@
 
 > **Documento de execução para um agente de programação (Codex ou equivalente).**
 >
-> **Status:** Etapas 01–08 concluídas; próxima: Etapa 09.
+> **Status:** Etapas 01–10 concluídas; próxima: Etapa 11.
 > **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + React + Canvas 2D.
 > **Fonte:** [Fredoka — Google Fonts](https://fonts.google.com/specimen/Fredoka), via `next/font/google`.
 > **Plataformas:** navegador desktop e mobile, com interação por mouse, toque e teclado onde fizer sentido.
@@ -1160,15 +1160,58 @@ PRÓXIMA ETAPA:
 
 **Aceite**
 
-- [ ] Uma partida pode ser jogada da onda 1 até a onda 10 sem qualquer operação no console.
-- [ ] As cinco classes de inimigos têm comportamento e animação adequados.
-- [ ] Próxima onda não pode começar antes da conclusão da atual.
-- [ ] A onda nunca termina enquanto houver spawns pendentes.
-- [ ] Vida `<= 0` sempre derrota; concluir a onda 10 com vidas `> 0` sempre vence.
-- [ ] Reiniciar repõe valores e permite jogar outra partida completa.
-- [ ] Testes, lint e build passam.
+- [x] Uma partida pode ser jogada da onda 1 até a onda 10 sem qualquer operação no console.
+- [x] As cinco classes de inimigos têm comportamento e animação adequados.
+- [x] Próxima onda não pode começar antes da conclusão da atual.
+- [x] A onda nunca termina enquanto houver spawns pendentes.
+- [x] Vida `<= 0` sempre derrota; concluir a onda 10 com vidas `> 0` sempre vence.
+- [x] Reiniciar repõe valores e permite jogar outra partida completa.
+- [x] Testes, lint e build passam.
 
 **Dependência:** Etapa 08.
+
+```text
+ETAPA CONCLUÍDA: 09 — Ondas, progressão, chefe e fim de jogo
+IMPLEMENTADO:
+- `WaveSystem` (puro): `buildSpawnQueue` (grupos → fila única ordenada por tempo, grupos
+  intercalados), `startWaveRun`/`takeDueSpawns` (cada inimigo liberado uma única vez) e
+  `getWaveBonus` (20 + 5 × onda nas ondas 1–9; a 10ª termina em vitória e não paga bônus).
+- `waves.ts`: as 10 ondas do §6.3, com atrasos por grupo e intervalos de 0,8–1,4 s; o King Slime
+  entra 6 s depois do início da onda 10, atrás da escolta.
+- `enemies.ts`: Goblin (22/25/12/1), Skeleton (50/17/15/1), Big Slime (95/12/22/1) e King Slime
+  (420/9/120/3, `boss`), com spritesheets reais e animação própria (fps por inimigo).
+- Engine: conclusão só com fila vazia E campo vazio; bônus pago uma vez e publicado em
+  `waveReward`; `enemiesDefeated` no snapshot; fim avaliado uma vez por passo, depois de escapes e
+  mortes, com precedência da derrota (vidas 0 no mesmo passo em que a onda 10 esvazia = derrota);
+  `endMatch` cancela fila, projéteis, efeitos, construção e seleção; `restart` zera tudo.
+- Renderer: barra de vida do chefe sempre visível, mais larga e grossa.
+- UI: status da onda com inimigos "no mapa / a caminho", aviso de onda final e bônus recebido;
+  toast de bônus com ícone de moeda; "Iniciar onda" explica também o bloqueio em pausa.
+- `GameOverDialog` (`<dialog>` modal): vitória/derrota com onda, vidas e derrotados; "Jogar de novo"
+  reinicia a mesma engine (sem novo RAF/listeners) e "Voltar ao menu" reinicia antes de sair (a tela
+  é preservada pelo <Activity>); não fecha com Esc; fecha ao esconder a tela.
+ARQUIVOS PRINCIPAIS:
+- src/game/systems/WaveSystem.ts, src/game/data/waves.ts, enemies.ts, src/game/config/balance.ts
+- src/game/engine/GameEngine.ts, GameRenderer.ts, src/game/types/game.ts, entities.ts
+- src/components/game/GameOverDialog.tsx, WaveControls.tsx, FeedbackToast.tsx
+- src/components/layout/GameShell.tsx, src/hooks/useFeedback.ts
+- src/tests/unit/waves.test.ts
+VALIDAÇÃO:
+- npm test: 80/80 (novos: composição das 10 ondas, chefe só na 10, intervalos, atributos §6.2,
+  fila ordenada e intercalada, spawn único, bônus, T11, T12, T15, T16, T17, precedência da derrota,
+  chefe tira 3 vidas, partida completa com as ondas reais vence com defesa razoável e perde sem
+  torres).
+- npm run lint, npm run typecheck, npm run build: ok.
+- Layout em 390, 768 e 1366 px sem rolagem horizontal nem estouro da barra lateral.
+- Partida completa validada pelo usuário no navegador.
+PENDÊNCIAS / RISCOS:
+- Balanceamento fácil demais: na simulação, 3 torres nível 1 (Archer 6,6 + Archer 13,5 +
+  Cannon 13,6) vencem as 10 ondas sem perder vidas; a casa (13,5) cobre três trechos da estrada.
+  Ajustar na Etapa 11 (números de `balance.ts`/`waves.ts`), mantendo as identidades das torres.
+- 1×/2× segue desativado (Etapa 10).
+PRÓXIMA ETAPA:
+- Etapa 10 — Pausa, velocidade, acessibilidade e experiência mobile.
+```
 
 ---
 
@@ -1178,28 +1221,79 @@ PRÓXIMA ETAPA:
 
 **Tarefas**
 
-- [ ] Conectar botões de pausa, retomar e `1×/2×` aos comandos reais do motor.
-- [ ] Confirmar que velocidade multiplica simulação de movimento, geração de inimigos e cooldown sem mudar física relativa.
-- [ ] Garantir que pausa não concede ouro nem faz avançar ondas.
-- [ ] Revisar áreas de clique/toque, bordas do Canvas, seleção e feedback em smartphones.
-- [ ] Evitar scroll horizontal e interferência de gestos do navegador na área de interação.
-- [ ] Criar estado de foco visível e labels para botões importantes.
-- [ ] Mostrar informações equivalentes no mobile, sem recursos exclusivos de hover.
-- [ ] Revisar orientação retrato; sem exigir paisagem para jogar.
-- [ ] Confirmar pausa ao ocultar aba/alternar aplicativo e retomada explícita.
-- [ ] Reduzir re-renderizações React desnecessárias e evitar atualização do HUD a cada frame.
-- [ ] Testar início/fim de partida após alternar muitas vezes entre 1×/2× e pause/resume.
+- [x] Conectar botões de pausa, retomar e `1×/2×` aos comandos reais do motor.
+- [x] Confirmar que velocidade multiplica simulação de movimento, geração de inimigos e cooldown sem mudar física relativa.
+- [x] Garantir que pausa não concede ouro nem faz avançar ondas.
+- [x] Revisar áreas de clique/toque, bordas do Canvas, seleção e feedback em smartphones.
+- [x] Evitar scroll horizontal e interferência de gestos do navegador na área de interação.
+- [x] Criar estado de foco visível e labels para botões importantes.
+- [x] Mostrar informações equivalentes no mobile, sem recursos exclusivos de hover.
+- [x] Revisar orientação retrato; sem exigir paisagem para jogar.
+- [x] Confirmar pausa ao ocultar aba/alternar aplicativo e retomada explícita.
+- [x] Reduzir re-renderizações React desnecessárias e evitar atualização do HUD a cada frame.
+- [x] Testar início/fim de partida após alternar muitas vezes entre 1×/2× e pause/resume.
 
 **Aceite**
 
-- [ ] Partida pode ser concluída em `390×844` usando apenas toque.
-- [ ] Não há toque desalinhado no mapa após rotação/resize.
-- [ ] Pausa congela toda a lógica; 2× acelera o jogo sem duplicar eventos.
-- [ ] Não há controles fora da viewport ou botões inacessíveis.
-- [ ] Teclado navega pelos menus e ações de interface; construção permanece possível por pointer/touch.
-- [ ] Testes, lint e build passam.
+- [x] Partida pode ser concluída em `390×844` usando apenas toque.
+- [x] Não há toque desalinhado no mapa após rotação/resize.
+- [x] Pausa congela toda a lógica; 2× acelera o jogo sem duplicar eventos.
+- [x] Não há controles fora da viewport ou botões inacessíveis.
+- [x] Teclado navega pelos menus e ações de interface; construção permanece possível por pointer/touch.
+- [x] Testes, lint e build passam.
 
 **Dependência:** Etapa 09.
+
+```text
+ETAPA CONCLUÍDA: 10 — Pausa, velocidade, acessibilidade e experiência mobile
+IMPLEMENTADO:
+- Engine: `setSpeed(1|2)` (valida o valor; bloqueado após o fim; publica só quando muda; zera o
+  acumulador). O passo continua fixo: 2× roda o dobro de passos por quadro, então movimento,
+  gerações, recargas, projéteis e efeitos aceleram juntos sem mudar a física relativa. `restart`
+  volta a 1×.
+- `WaveControls`: botão 1×/2× ligado (rótulo "Velocidade N×. Alternar para M×"), bloqueio com
+  motivo após o fim; "Iniciar onda" explica o bloqueio em pausa; `title` em pausa e velocidade.
+- Sem dependência de hover: no modo de construção, a descrição da torre aparece em texto
+  ("Archer: flechas rápidas em um alvo. …"), também no desktop; o painel vazio de detalhes dá lugar
+  a ela (a barra lateral continua sem rolagem em 1366×768).
+- Mapa: toque longo não abre menu de contexto nem seleção (`contextmenu` bloqueado,
+  `select-none`, `-webkit-touch-callout: none`), além do `touch-action: manipulation` já existente.
+- Diálogo de fim: rótulos das caixas com o ícone acima do texto ("Derrotados" vazava da caixa).
+- Já existentes e revisados: foco visível (contorno dourado de 3 px), pausa automática ao ocultar
+  aba/perder foco/sair de /play com retomada explícita, HUD atualizado só quando a engine publica
+  mudanças (gerar, morrer, escapar, comandos), nunca a cada quadro.
+ARQUIVOS PRINCIPAIS:
+- src/game/engine/GameEngine.ts, src/components/game/WaveControls.tsx, TowerSelector.tsx,
+  GameCanvas.tsx, GameOverDialog.tsx, src/components/layout/GameShell.tsx
+- src/tests/unit/speed.test.ts
+VALIDAÇÃO:
+- npm test: 90/90 (novos: setSpeed valida e publica uma vez; T10 em 2× = dobro de gerações e
+  distância no mesmo tempo real; recargas proporcionais; mesma onda em 1× e 2× com resultado idêntico
+  em metade dos quadros; delta enorme em 2× limitado; sem troca após o fim e reinício volta a 1×;
+  pausa não dá ouro, não gera nem avança onda, posições e recargas congeladas mesmo trocando de
+  velocidade; alternar 1×/2× e pausar/retomar a cada poucos quadros não muda o resultado; duas
+  partidas completas seguidas com trocas constantes terminam e reiniciam).
+- npm run lint, npm run typecheck, npm run build: ok.
+- Edge headless (CDP, `next start`), 390×844 só com toque: partida completa em 2× até a vitória
+  (20 vidas, 115 derrotados = total das 10 ondas, sem eventos duplicados), "Jogar de novo" por toque
+  zera tudo e volta a 1×; onda 1 em 2× ≈ 20 s reais (≈ 40 s em 1×); pausa congela o HUD; pausa
+  automática no blur e ao ocultar a aba, continua pausado ao voltar; paisagem 844×390 e retorno ao
+  retrato sem rolagem horizontal; toques após rotação e nos cantos caem nas células certas (2,4;
+  17,10; 0,0; 19,11); nenhum botão fora da viewport ou menor que 40 px.
+- Desktop 1366×768: Tab percorre menu, Iniciar onda, Pausar, Velocidade e cartões com contorno de
+  foco; Enter inicia a onda, alterna 2× e pausa, e o foco vai para "Retomar"; barra lateral sem
+  rolagem no modo de construção; diálogo de fim dentro da viewport nas duas larguras; sem erros de
+  console.
+- Observação de teste: o Edge headless cai para 1 quadro/s depois de uns 10–20 s mesmo numa página
+  mínima com canvas (não é o jogo); `Page.startScreencast` mantém os 60 quadros/s nos roteiros.
+PENDÊNCIAS / RISCOS:
+- Canvas não é focável pelo teclado: construção segue por mouse/toque (aceite da etapa).
+- No toque não há prévia de alcance antes de construir; o motivo de casa inválida aparece no aviso
+  e o alcance aparece ao selecionar a torre.
+- Preferência de velocidade ainda não persiste (Etapa 11); balanceamento continua fácil (Etapa 11).
+PRÓXIMA ETAPA:
+- Etapa 11 — Persistência, polimento, teste completo e entrega.
+```
 
 ---
 
@@ -1403,9 +1497,9 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 06 — Construção e economia | Concluída | PlacementSystem, construção atômica, prévia válida/inválida, toque ≠ rolagem, seleção, 35 testes |
 | 07 — Combate | Concluída | CombatSystem puro, projéteis com sprite, área/lentidão, recompensa única, efeitos; 49 testes |
 | 08 — Upgrades e venda | Concluída | EconomySystem, níveis 1–3 no combate, venda com confirmação, painel contextual; 64 testes |
-| 09 — Ondas e chefe | Pendente | — |
-| 10 — Mobile e controles | Pendente | — |
+| 09 — Ondas e chefe | Concluída | WaveSystem, 10 ondas, 4 novos inimigos + chefe, bônus, GameOverDialog, precedência da derrota; 80 testes |
+| 10 — Mobile e controles | Concluída | `setSpeed` 1×/2×, pausa sem efeitos, sem dependência de hover, gestos do navegador bloqueados no mapa, partida completa só com toque; 90 testes |
 | 11 — Persistência e entrega | Pendente | — |
 
-**Ponto de retomada atual:** Etapa 09 — Ondas, progressão, chefe e fim de jogo.
+**Ponto de retomada atual:** Etapa 11 — Persistência, polimento, teste completo e entrega.
 

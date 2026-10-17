@@ -60,9 +60,13 @@ export function TowerSelector({ snapshot, onSelect, onCancel, onUnavailable }: T
           );
         })}
       </ul>
-      <p aria-live="polite" className="mt-2 text-sm leading-snug text-ink-700 lg:sr-only">
+      {/*
+        A descrição da torre escolhida aparece em texto (não só no `title`, que depende de hover).
+        No desktop, a dica geral fica só para leitores de tela, para a barra lateral caber sem rolagem.
+      */}
+      <p aria-live="polite" className={cn("mt-2 text-sm leading-snug text-ink-700", !building && "lg:sr-only")}>
         {building
-          ? `Toque numa casa livre do mapa para construir a ${building.name}.`
+          ? `${building.name}: ${building.summary.toLowerCase()}. Toque numa casa livre do mapa para construir.`
           : "Escolha uma torre e toque numa casa livre do mapa. Toque numa torre construída para melhorar ou vender."}
       </p>
     </PixelPanel>

@@ -91,8 +91,9 @@ export function GameOverDialog({ snapshot, onRestart, onExit }: GameOverDialogPr
 
 function Stat({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
   return (
-    <PixelPanel skin="slot" className="flex flex-col items-center gap-1 px-1 py-1.5 text-parchment-100">
-      <dt className="flex items-center gap-1 text-parchment-300">
+    <PixelPanel skin="slot" className="flex min-w-0 flex-col items-center gap-1 px-1 py-1.5 text-parchment-100">
+      {/* Ícone acima do rótulo, para "Derrotados" caber na caixa em qualquer largura. */}
+      <dt className="flex flex-col items-center gap-1 text-parchment-300">
         {icon}
         {label}
       </dt>

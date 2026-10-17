@@ -60,7 +60,11 @@ export function WaveControls({
     : phase === "victory" || phase === "defeat"
       ? "A partida terminou."
       : null;
-  const speedReason = !onToggleSpeed ? "A troca de velocidade ainda não está disponível." : null;
+  const speedReason = !onToggleSpeed
+    ? "Aguarde o mapa ficar pronto."
+    : phase === "victory" || phase === "defeat"
+      ? "A partida terminou."
+      : null;
 
   return (
     <PixelPanel
@@ -88,11 +92,13 @@ export function WaveControls({
         <PixelButton
           icon={paused ? "play" : "pause"}
           aria-label={paused ? "Retomar" : "Pausar"}
+          title={paused ? "Retomar" : "Pausar"}
           aria-disabled={pauseReason !== null}
           onClick={() => (pauseReason ? onUnavailable(pauseReason) : onTogglePause?.())}
         />
         <PixelButton
-          aria-label={`Velocidade ${speed}×, alternar`}
+          aria-label={`Velocidade ${speed}×. Alternar para ${speed === 1 ? 2 : 1}×`}
+          title={`Alternar para ${speed === 1 ? 2 : 1}×`}
           className="min-w-14 tabular-nums"
           aria-disabled={speedReason !== null}
           onClick={() => (speedReason ? onUnavailable(speedReason) : onToggleSpeed?.())}

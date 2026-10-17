@@ -44,6 +44,7 @@ export function GameShell() {
     if (!result.ok) warn(result.reason);
   };
   const togglePause = () => run(() => (snapshot.paused ? engine.resume() : engine.pause()));
+  const toggleSpeed = () => run(() => engine.setSpeed(snapshot.speed === 1 ? 2 : 1));
 
   // Tocar no mesmo cartão sai do modo de construção; outro cartão troca o tipo.
   const toggleBuildType = (type: TowerType) =>
@@ -139,12 +140,14 @@ export function GameShell() {
             // Sem sprites prontos o laço não roda: comandos de tempo ficam desativados.
             onStartWave={ready ? () => run(() => engine.startWave()) : undefined}
             onTogglePause={ready ? togglePause : undefined}
+            onToggleSpeed={ready ? toggleSpeed : undefined}
             onUnavailable={warn}
           />
           {/*
             Painel contextual: com uma torre selecionada, os detalhes ocupam o lugar dos cartões
             (a engine já trata seleção e modo de construção como exclusivos). ✗, Esc ou tocar numa
-            casa vazia trazem os cartões de volta.
+            casa vazia trazem os cartões de volta. No modo de construção, o painel vazio de detalhes
+            dá lugar à descrição da torre escolhida.
           */}
           {!snapshot.selectedTower && (
             <TowerSelector
@@ -154,13 +157,15 @@ export function GameShell() {
               onUnavailable={warn}
             />
           )}
-          <TowerDetails
-            snapshot={snapshot}
-            onDeselect={cancelSelection}
-            onUpgrade={upgradeTower}
-            onSell={sellTower}
-            onUnavailable={warn}
-          />
+          {!snapshot.selectedBuildType && (
+            <TowerDetails
+              snapshot={snapshot}
+              onDeselect={cancelSelection}
+              onUpgrade={upgradeTower}
+              onSell={sellTower}
+              onUnavailable={warn}
+            />
+          )}
         </aside>
       </div>
 

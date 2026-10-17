@@ -162,7 +162,9 @@ export function GameCanvas({ images, engine, level, layout, onCellTap }: GameCan
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
       onPointerLeave={handlePointerLeave}
-      className="pixelated block aspect-320/192 w-full touch-manipulation bg-grass-700"
+      // Toque longo não abre menu/seleção do navegador sobre o mapa.
+      onContextMenu={(event) => event.preventDefault()}
+      className="pixelated block aspect-320/192 w-full touch-manipulation select-none bg-grass-700 [-webkit-touch-callout:none]"
     />
   );
 }
