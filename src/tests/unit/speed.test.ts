@@ -98,7 +98,7 @@ describe("Velocidade 1×/2×", () => {
     expect(enemy.distance - before).toBeLessThanOrEqual(16 * 0.1 * 2 + 1e-9);
   });
 
-  it("não troca de velocidade depois do fim; reiniciar volta a 1×", () => {
+  it("não troca de velocidade depois do fim; reiniciar mantém a velocidade escolhida", () => {
     const many: WaveDefinition[] = [{ groups: [{ enemy: "goblin", count: 30, delay: 0, interval: 0.8 }] }];
     const engine = new GameEngine({ layout, waves: many });
     engine.setSpeed(2);
@@ -107,7 +107,8 @@ describe("Velocidade 1×/2×", () => {
     expect(engine.getSnapshot().phase).toBe("defeat");
     expect(engine.setSpeed(1).ok).toBe(false);
     engine.restart();
-    expect(engine.getSnapshot().speed).toBe(1);
+    expect(engine.getSnapshot().speed).toBe(2);
+    expect(engine.setSpeed(1).ok).toBe(true);
   });
 });
 
@@ -175,7 +176,7 @@ describe("Pausa", () => {
       expect(["victory", "defeat"]).toContain(engine.getSnapshot().phase);
       expect(engine.getSnapshot().currentWave).toBeGreaterThan(0);
       engine.restart();
-      expect(engine.getSnapshot()).toMatchObject({ phase: "preparing", currentWave: 0, speed: 1, paused: false });
+      expect(engine.getSnapshot()).toMatchObject({ phase: "preparing", currentWave: 0, paused: false });
     }
   });
 });

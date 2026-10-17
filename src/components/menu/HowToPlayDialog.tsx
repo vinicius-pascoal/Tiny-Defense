@@ -55,7 +55,7 @@ const TOPICS: Topic[] = [
   {
     title: "Ondas",
     illustration: <PixelSprite sprite="game/enemies/king_slime" />,
-    body: `São ${TOTAL_WAVES} ondas. Entre elas, reorganize a defesa e toque em Iniciar onda. A última traz o King Slime.`,
+    body: `São ${TOTAL_WAVES} ondas, cada uma com inimigos mais resistentes. Entre elas, reorganize a defesa e toque em Iniciar onda. A última traz o King Slime.`,
   },
 ];
 

@@ -281,25 +281,48 @@ describe("Partida completa com as ondas reais", () => {
     return engine.getSnapshot();
   }
 
-  it("uma defesa razoável vence as 10 ondas, chefe incluído", () => {
+  const at = (col: number, row: number) => ({ upgrade: { col, row } });
+
+  it("uma defesa razoável (4 torres bem posicionadas, todas no nível 3) vence, chefe incluído", () => {
     const s = playMatch([
       { build: "archer", col: 6, row: 6 },
       { build: "archer", col: 13, row: 5 },
       { build: "iceWizard", col: 11, row: 6 },
       { build: "cannon", col: 13, row: 6 },
-      { upgrade: { col: 13, row: 5 } },
-      { upgrade: { col: 6, row: 6 } },
-      { upgrade: { col: 13, row: 6 } },
+      at(13, 5), at(6, 6), at(13, 6), at(11, 6),
+      at(13, 5), at(6, 6), at(13, 6), at(11, 6),
     ]);
     expect(s).toMatchObject({ phase: "victory", currentWave: TOTAL_WAVES });
     expect(s.lives).toBeGreaterThan(0);
     const total = WAVES.flatMap((definition) => definition.groups).reduce((sum, group) => sum + group.count, 0);
-    expect(s.enemiesDefeated + (INITIAL_LIVES - s.lives)).toBeLessThanOrEqual(total);
+    // Cada inimigo morre ou escapa (escapes tiram ≥ 1 vida; o chefe tira 3).
+    expect(s.enemiesDefeated).toBeLessThanOrEqual(total);
+    expect(s.enemiesDefeated + (INITIAL_LIVES - s.lives)).toBeGreaterThanOrEqual(total);
+  });
+
+  it("não é trivial: três torres nível 1 não seguram as ondas finais", () => {
+    const s = playMatch([
+      { build: "archer", col: 6, row: 6 },
+      { build: "archer", col: 13, row: 5 },
+      { build: "cannon", col: 13, row: 6 },
+    ]);
+    expect(s.phase).toBe("defeat");
+    expect(s.currentWave).toBeGreaterThanOrEqual(5);
   });
 
   it("sem torres, o castelo cai antes do fim", () => {
     const s = playMatch([]);
     expect(s.phase).toBe("defeat");
     expect(s.currentWave).toBeLessThan(TOTAL_WAVES);
+  });
+
+  it("a vida dos inimigos cresce com a onda", () => {
+    const multipliers = WAVES.map((definition) => definition.healthMultiplier ?? 1);
+    expect(multipliers[0]).toBe(1);
+    for (let i = 1; i < multipliers.length; i++) expect(multipliers[i]).toBeGreaterThan(multipliers[i - 1]);
+    const engine = new GameEngine({ layout, waves: [{ ...wave("bigSlime"), healthMultiplier: 2 }] });
+    engine.startWave();
+    engine.step(SIM_STEP);
+    expect(engine.getEnemies()[0]).toMatchObject({ health: 190, maxHealth: 190 });
   });
 });

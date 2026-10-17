@@ -217,6 +217,11 @@ canvas {
     animation: toast-in 160ms ease-out both;
   }
 
+  /* Indicador do HUD que acabou de cair (ex.: vidas): pisca em vermelho e treme de leve. */
+  .hud-alert {
+    animation: hud-alert 600ms ease-out;
+  }
+
   /* Inimigos decorativos do menu atravessando o cenário até o castelo. */
   .menu-walker {
     animation: menu-walk var(--walk-duration) linear var(--walk-delay) infinite both;
@@ -229,6 +234,29 @@ canvas {
   }
   to {
     background-position: calc(-1 * var(--sheet-w) * var(--px)) 0;
+  }
+}
+
+@keyframes hud-alert {
+  0%,
+  40% {
+    filter: sepia(1) saturate(4) hue-rotate(-30deg) brightness(1.1);
+  }
+  10% {
+    transform: translateX(calc(-1 * var(--px)));
+  }
+  20% {
+    transform: translateX(var(--px));
+  }
+  30% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes hud-alert-color {
+  0%,
+  40% {
+    filter: sepia(1) saturate(4) hue-rotate(-30deg) brightness(1.1);
   }
 }
 
@@ -257,6 +285,11 @@ canvas {
 @media (prefers-reduced-motion: reduce) {
   .pixel-sprite[data-animated] {
     animation: none;
+  }
+
+  /* Sem tremor: só a cor de alerta. */
+  .hud-alert {
+    animation: hud-alert-color 600ms ease-out;
   }
 
   .menu-walker {

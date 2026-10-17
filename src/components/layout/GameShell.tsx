@@ -19,6 +19,7 @@ import { createMapLayout } from "@/game/systems/MapLayout";
 import type { GridPosition, TowerType } from "@/game/types/game";
 import { useFeedback } from "@/hooks/useFeedback";
 import { useGameController } from "@/hooks/useGameController";
+import { useMatchRecords } from "@/hooks/useMatchRecords";
 import { useSpriteLoader } from "@/hooks/useSpriteLoader";
 import { GAME_SCENE_SPRITES } from "@/lib/assets";
 
@@ -33,6 +34,7 @@ const SCENE_SPRITES = [...new Set([...GAME_SCENE_SPRITES, ...getLevelSprites(LEV
  */
 export function GameShell() {
   const { engine, snapshot } = useGameController(LAYOUT);
+  useMatchRecords(engine);
   const { state: loadState, retry } = useSpriteLoader(SCENE_SPRITES);
   const { message, notify } = useFeedback();
   const warn = (reason: string) => notify(reason, "warning");

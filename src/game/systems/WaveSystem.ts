@@ -9,6 +9,8 @@ export type SpawnEvent = Readonly<{ time: number; enemy: EnemyType }>;
 export type WaveRun = {
   queue: SpawnEvent[];
   time: number;
+  /** Multiplicador de vida aplicado a todos os inimigos gerados nesta onda. */
+  healthMultiplier: number;
 };
 
 /** Expande os grupos da onda numa fila única, ordenada pelo tempo (empates mantêm a ordem dos grupos). */
@@ -24,7 +26,12 @@ export function buildSpawnQueue(wave: WaveDefinition): SpawnEvent[] {
 }
 
 export function startWaveRun(wave: WaveDefinition): WaveRun {
-  return { queue: buildSpawnQueue(wave), time: 0 };
+  const multiplier = wave.healthMultiplier ?? 1;
+  return {
+    queue: buildSpawnQueue(wave),
+    time: 0,
+    healthMultiplier: Number.isFinite(multiplier) && multiplier > 0 ? multiplier : 1,
+  };
 }
 
 /** Avança o relógio da onda e retira da fila os inimigos que já devem surgir (pode ser nenhum). */

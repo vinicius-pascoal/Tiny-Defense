@@ -1,6 +1,7 @@
 import { ScreenShell } from "@/components/layout/ScreenShell";
 import { HowToPlayDialog } from "@/components/menu/HowToPlayDialog";
 import { MenuScene } from "@/components/menu/MenuScene";
+import { RecordsPanel } from "@/components/menu/RecordsPanel";
 import { PixelButton } from "@/components/ui/PixelButton";
 import { PixelPanel } from "@/components/ui/PixelPanel";
 
@@ -35,6 +36,8 @@ export default function Home() {
           </li>
         </ul>
       </PixelPanel>
+
+      <RecordsPanel />
     </ScreenShell>
   );
 }

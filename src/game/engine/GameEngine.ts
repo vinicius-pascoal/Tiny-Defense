@@ -169,7 +169,7 @@ export class GameEngine {
     const run = this.waveRun;
     if (run) {
       for (const type of takeDueSpawns(run, dt)) {
-        this.enemies.push(createEnemy(`enemy-${this.nextEnemyId++}`, type, this.path));
+        this.enemies.push(createEnemy(`enemy-${this.nextEnemyId++}`, type, this.path, run.healthMultiplier));
         this.dirty = true;
       }
     }
@@ -180,6 +180,8 @@ export class GameEngine {
       if (advanceEnemy(enemy, dt, this.path)) {
         enemy.state = "escaped";
         this.lives = Math.max(this.lives - ENEMIES[enemy.type].castleDamage, 0);
+        // Retorno visual no portão: o castelo foi atingido.
+        this.effects.push({ kind: "escape", x: enemy.position.x, y: enemy.position.y - 4, radius: 12, age: 0, duration: 0.5 });
         this.dirty = true;
       } else {
         remaining.push(enemy);
@@ -343,11 +345,13 @@ export class GameEngine {
     return OK;
   }
 
-  /** Restaura o estado inicial, descartando entidades e filas anteriores. */
+  /**
+   * Restaura o estado inicial, descartando entidades e filas anteriores. A velocidade é
+   * preferência do jogador (salva localmente), não estado da partida: continua a mesma.
+   */
   restart(): CommandResult {
     this.phase = "preparing";
     this.paused = false;
-    this.speed = 1;
     this.lives = INITIAL_LIVES;
     this.gold = INITIAL_GOLD;
     this.currentWave = 0;

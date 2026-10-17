@@ -53,6 +53,7 @@ const EFFECT_STYLE: Record<VisualEffect["kind"], { fill: string; stroke: string 
   explosion: { fill: "rgb(244 197 66 / 0.35)", stroke: "rgb(201 143 28 / 0.9)" },
   frost: { fill: "rgb(159 216 240 / 0.45)", stroke: "rgb(58 139 189 / 0.9)" },
   death: { fill: "rgb(251 243 223 / 0.5)", stroke: "rgb(251 243 223 / 0)" },
+  escape: { fill: "rgb(200 68 58 / 0.4)", stroke: "rgb(200 68 58 / 0.95)" },
 };
 
 /** Estado contextual desenhado por cima do mapa (preenchido pela interface). */
@@ -269,7 +270,10 @@ export class GameRenderer {
     const { ctx } = this;
     const t = Math.min(effect.age / effect.duration, 1);
     const style = EFFECT_STYLE[effect.kind];
-    const radius = effect.kind === "explosion" ? effect.radius * (0.5 + 0.5 * t) : effect.radius * (0.4 + 0.6 * t);
+    const radius =
+      effect.kind === "explosion" || effect.kind === "escape"
+        ? effect.radius * (0.5 + 0.5 * t)
+        : effect.radius * (0.4 + 0.6 * t);
 
     ctx.globalAlpha = 1 - t;
     ctx.beginPath();

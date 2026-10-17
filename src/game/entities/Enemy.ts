@@ -2,16 +2,18 @@ import { ENEMIES } from "@/game/data/enemies";
 import type { Enemy, EnemyType } from "@/game/types/entities";
 import { positionAt, type WorldPath } from "@/game/systems/PathSystem";
 
-export function createEnemy(id: string, type: EnemyType, path: WorldPath): Enemy {
+/** `healthMultiplier` vem da onda (dificuldade crescente); a vida final é arredondada. */
+export function createEnemy(id: string, type: EnemyType, path: WorldPath, healthMultiplier = 1): Enemy {
   const definition = ENEMIES[type];
+  const health = Math.max(Math.round(definition.health * healthMultiplier), 1);
   return {
     id,
     type,
     state: "alive",
     distance: 0,
     position: positionAt(path, 0),
-    health: definition.health,
-    maxHealth: definition.health,
+    health,
+    maxHealth: health,
     speed: definition.speed,
     slowFactor: 0,
     slowTimer: 0,

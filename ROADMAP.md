@@ -2,7 +2,7 @@
 
 > **Documento de execução para um agente de programação (Codex ou equivalente).**
 >
-> **Status:** Etapas 01–10 concluídas; próxima: Etapa 11.
+> **Status:** Etapas 01–11 concluídas (MVP completo); publicação bloqueada até verificar a licença do pacote de gameplay.
 > **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + React + Canvas 2D.
 > **Fonte:** [Fredoka — Google Fonts](https://fonts.google.com/specimen/Fredoka), via `next/font/google`.
 > **Plataformas:** navegador desktop e mobile, com interação por mouse, toque e teclado onde fizer sentido.
@@ -1303,30 +1303,86 @@ PRÓXIMA ETAPA:
 
 **Tarefas**
 
-- [ ] Implementar armazenamento local versionado para recordes e preferências, com `try/catch` e valores padrão.
-- [ ] Salvar pelo menos: maior onda alcançada, vitórias, derrotas e preferência de velocidade (caso faça sentido).
-- [ ] Não prometer retomada de partida em andamento: **essa funcionalidade está fora do MVP**.
-- [ ] Criar uma seção simples de recordes/estatísticas no menu inicial ou no resultado.
-- [ ] Adicionar feedback visual em construção válida, compra inválida, melhoria, morte, escape e resultado, sem poluir a tela.
-- [ ] Implementar áudio somente se houver assets apropriados ou geração Web Audio simples; se não for feito, remover qualquer botão de som inoperante.
-- [ ] Revisar o carregamento de imagens, erros de assets e comportamento offline após carregar a página.
-- [ ] Revisar a seção de créditos e pendências de licenciamento.
-- [ ] Executar lint, build, suíte de testes, teste manual desktop/mobile e uma partida completa.
-- [ ] Identificar problemas de balanceamento: dificuldade, excesso/falta de ouro, viabilidade de torres e duração da partida.
-- [ ] Ajustar números em `balance.ts` e `waves.ts` sem alterar a arquitetura.
-- [ ] Atualizar `README.md` com instalação, execução, comandos, mecânicas e créditos.
-- [ ] Garantir que o deploy como app Next.js estático/sem backend próprio seja viável, desde que a configuração do projeto seja compatível.
+- [x] Implementar armazenamento local versionado para recordes e preferências, com `try/catch` e valores padrão.
+- [x] Salvar pelo menos: maior onda alcançada, vitórias, derrotas e preferência de velocidade (caso faça sentido).
+- [x] Não prometer retomada de partida em andamento: **essa funcionalidade está fora do MVP**.
+- [x] Criar uma seção simples de recordes/estatísticas no menu inicial ou no resultado.
+- [x] Adicionar feedback visual em construção válida, compra inválida, melhoria, morte, escape e resultado, sem poluir a tela.
+- [x] Implementar áudio somente se houver assets apropriados ou geração Web Audio simples; se não for feito, remover qualquer botão de som inoperante.
+- [x] Revisar o carregamento de imagens, erros de assets e comportamento offline após carregar a página.
+- [x] Revisar a seção de créditos e pendências de licenciamento.
+- [x] Executar lint, build, suíte de testes, teste manual desktop/mobile e uma partida completa.
+- [x] Identificar problemas de balanceamento: dificuldade, excesso/falta de ouro, viabilidade de torres e duração da partida.
+- [x] Ajustar números em `balance.ts` e `waves.ts` sem alterar a arquitetura.
+- [x] Atualizar `README.md` com instalação, execução, comandos, mecânicas e créditos.
+- [x] Garantir que o deploy como app Next.js estático/sem backend próprio seja viável, desde que a configuração do projeto seja compatível.
 
 **Aceite**
 
-- [ ] Testes, lint e build passam em ambiente limpo.
-- [ ] Uma partida completa termina sem erro e pode ser repetida.
-- [ ] Recordes e preferências persistem após atualização da página.
-- [ ] Dispositivos alvo exibem jogo e controles adequadamente.
-- [ ] Créditos presentes; pendência de licença do gameplay devidamente sinalizada antes de publicação.
-- [ ] README e ROADMAP refletem o estado real do projeto.
+- [x] Testes, lint e build passam em ambiente limpo.
+- [x] Uma partida completa termina sem erro e pode ser repetida.
+- [x] Recordes e preferências persistem após atualização da página.
+- [x] Dispositivos alvo exibem jogo e controles adequadamente.
+- [x] Créditos presentes; pendência de licença do gameplay devidamente sinalizada antes de publicação.
+- [x] README e ROADMAP refletem o estado real do projeto.
 
 **Dependência:** Etapa 10.
+
+```text
+ETAPA CONCLUÍDA: 11 — Persistência, polimento, teste completo e entrega
+IMPLEMENTADO:
+- `lib/storage.ts`: save versionado (`tiny-defense:save`, versão 1) com maior onda, vitórias,
+  derrotas e velocidade preferida; todo acesso em `try/catch`; JSON corrompido, versão desconhecida,
+  storage bloqueado ou campos inválidos viram os padrões (campo a campo); atualizações puras;
+  snapshot estável para `useSyncExternalStore` (padrões no servidor/hidratação, evento `storage`
+  de outras abas). Retomada de partida em andamento não existe (fora do MVP).
+- `useMatchRecords`: aplica a velocidade salva ao abrir a partida e grava maior onda (ao iniciar
+  cada onda), vitória/derrota (uma vez por partida) e trocas de velocidade. `restart` passou a manter
+  a velocidade (preferência do jogador, não estado da partida).
+- Menu: painel "Recordes" (melhor onda, vitórias, derrotas; texto convidativo sem partidas).
+- Retorno visual de escape: efeito vermelho no portão e indicador de vidas do HUD pisca/treme
+  (só a cor com `prefers-reduced-motion`). Construção, compra inválida, melhoria, venda, bônus,
+  morte e resultado já tinham retorno (avisos, efeitos e diálogo).
+- Áudio: não implementado (sem assets licenciados); não há nenhum botão de som.
+- Balanceamento (simulações com 14 estratégias): sem ajuste, 3 torres nível 1 venciam sem perder
+  vidas. Agora a vida dos inimigos cresce +50% por onda (`healthMultiplier` em `waves.ts`,
+  1× → 5,5×), mantendo os atributos e recompensas do §6.2. Resultado: sem torres perde na onda 3;
+  1 Archer na 4; 3 torres nível 1 na 8; 2 torres nível 3 ou torres mal posicionadas perdem nas
+  ondas 8–10; 4–5 torres bem posicionadas no nível 3 vencem com 8–14 vidas; defesa completa (6–8
+  torres no nível 3) vence intacta. Ondas de ~6–20 s (1×: ~12–80 s); ouro sobra só para quem já
+  maximizou a defesa.
+- Deploy: `npm run build:static` gera `out/` 100% estático (Cache Components/PPR desligados só
+  nesse modo, pois não são aceitos em `output: "export"`); `npm run build` + `start` seguem iguais.
+- README reescrito (instalação, comandos, como jogar, tabelas de torres/inimigos, recordes,
+  estrutura, deploy, limitações, créditos). "Como jogar" cita a dificuldade crescente.
+ARQUIVOS PRINCIPAIS:
+- src/lib/storage.ts, src/hooks/useSaveData.ts, src/hooks/useMatchRecords.ts
+- src/components/menu/RecordsPanel.tsx, src/app/page.tsx, src/components/game/GameHUD.tsx
+- src/game/data/waves.ts, src/game/systems/WaveSystem.ts, src/game/entities/Enemy.ts,
+  src/game/engine/GameEngine.ts, GameRenderer.ts, src/game/types/entities.ts
+- next.config.ts, package.json, README.md, src/app/globals.css
+- src/tests/unit/storage.test.ts, waves.test.ts, speed.test.ts
+VALIDAÇÃO:
+- npm test: 97/97 (novos: salvar/ler, T19 storage inválido/lançando erro/ausente, correção campo a
+  campo, maior onda só sobe e vitória = onda 10, preferência de velocidade, vida cresce por onda,
+  defesa razoável vence, 3 torres nível 1 perdem, reinício mantém a velocidade).
+- Ambiente limpo (sem `.next`/`out`, dependências reinstaladas pelo lockfile): npm test, lint,
+  typecheck, build e build:static ok.
+- Edge headless, 390×844 só com toque, em `next start` e no `out/` estático servido como arquivos:
+  menu sem recordes → derrota na onda 3 → menu "Melhor onda 3/10, Derrotas 1", persiste após
+  recarregar; 2× salvo e restaurado; storage corrompido = padrões sem erro; sprite bloqueado =
+  aviso "1 imagem falhou" e "Tentar novamente" recupera; offline depois de carregar a partida
+  continua; HUD pisca ao perder vida. Partida completa (4 torres no nível 3, 2×): vitória com 12
+  vidas, igual à simulação; "Jogar de novo" mantém 2×. Sem erros de console além dos esperados.
+PENDÊNCIAS / RISCOS:
+- Licença do pacote Simple Tower Defense não verificada: **bloqueia publicação** (aviso nos
+  créditos e no README).
+- Offline, navegar entre telas exige rede (o Next busca o payload da rota); PWA/offline é pós-MVP.
+- No modo estático, sair de /play encerra a partida (sem Cache Components não há preservação).
+- Balanceamento validado por simulação e partidas automatizadas; vale uma rodada de jogo humano.
+PRÓXIMA ETAPA:
+- MVP concluído. Itens do §11 só com nova definição de prioridade.
+```
 
 ---
 
@@ -1458,20 +1514,20 @@ Esses itens **não devem atrasar o MVP** e não devem ser iniciados automaticame
 
 ## 12. Checklist final de pronto para entrega
 
-- [ ] Menu e gameplay com identidade Tiny Defense e fonte Fredoka.
-- [ ] Assets reais do usuário carregando corretamente.
-- [ ] Caminho 20×12, cenário e castelo renderizados sem distorções.
-- [ ] Inimigos percorrem caminho e atacam o castelo por escape.
-- [ ] Três torres funcionais: Archer, Cannon e Ice Wizard.
-- [ ] Sistema de dano, slow, explosão e recompensas correto.
-- [ ] Construção, melhoria até nível 3 e venda sem inconsistências.
-- [ ] Dez ondas configuradas e um chefe final.
-- [ ] Pausa, retomada, 1×/2×, vitória, derrota e reinício.
-- [ ] HUD consistente e controles desktop/mobile.
-- [ ] Recordes/configurações locais persistidos.
-- [ ] Testes e build aprovados.
-- [ ] README e créditos revisados.
-- [ ] Licença do pacote de gameplay **verificada antes da publicação**.
+- [x] Menu e gameplay com identidade Tiny Defense e fonte Fredoka.
+- [x] Assets reais do usuário carregando corretamente.
+- [x] Caminho 20×12, cenário e castelo renderizados sem distorções.
+- [x] Inimigos percorrem caminho e atacam o castelo por escape.
+- [x] Três torres funcionais: Archer, Cannon e Ice Wizard.
+- [x] Sistema de dano, slow, explosão e recompensas correto.
+- [x] Construção, melhoria até nível 3 e venda sem inconsistências.
+- [x] Dez ondas configuradas e um chefe final.
+- [x] Pausa, retomada, 1×/2×, vitória, derrota e reinício.
+- [x] HUD consistente e controles desktop/mobile.
+- [x] Recordes/configurações locais persistidos.
+- [x] Testes e build aprovados.
+- [x] README e créditos revisados.
+- [ ] Licença do pacote de gameplay **verificada antes da publicação**. (Pendente: depende do dono do projeto; não pode ser resolvida no código.)
 
 ---
 
@@ -1499,7 +1555,7 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 08 — Upgrades e venda | Concluída | EconomySystem, níveis 1–3 no combate, venda com confirmação, painel contextual; 64 testes |
 | 09 — Ondas e chefe | Concluída | WaveSystem, 10 ondas, 4 novos inimigos + chefe, bônus, GameOverDialog, precedência da derrota; 80 testes |
 | 10 — Mobile e controles | Concluída | `setSpeed` 1×/2×, pausa sem efeitos, sem dependência de hover, gestos do navegador bloqueados no mapa, partida completa só com toque; 90 testes |
-| 11 — Persistência e entrega | Pendente | — |
+| 11 — Persistência e entrega | Concluída | Save versionado, recordes no menu, escape com retorno visual, vida +50%/onda, build estático, README; 97 testes |
 
-**Ponto de retomada atual:** Etapa 11 — Persistência, polimento, teste completo e entrega.
+**Ponto de retomada atual:** MVP concluído. Antes de publicar: verificar a licença do pacote de gameplay. Próximas evoluções (§11) dependem de nova priorização.
 

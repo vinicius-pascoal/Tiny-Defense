@@ -53,7 +53,7 @@ export type Projectile = {
 
 /** Efeito visual passageiro, sem regra de jogo; avança no tempo de simulação. */
 export type VisualEffect = {
-  kind: "hit" | "explosion" | "frost" | "death";
+  kind: "hit" | "explosion" | "frost" | "death" | "escape";
   x: number;
   y: number;
   radius: number;
