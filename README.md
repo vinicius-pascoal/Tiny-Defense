@@ -94,6 +94,8 @@ Depois de carregada, a partida continua funcionando sem internet; navegar entre 
   - `ui/travelbook/` — interface (ícones, painéis, molduras).
   - `meta/sprite-manifest.json` — dimensões e quadros dos sprites de gameplay.
 - Documentação e licenças em `docs/` (`ASSETS_README.md`, `LICENSE_UI.txt`).
+- Ícones do site em `src/app/` (`favicon.ico` 16/32/64, `icon.svg`, `apple-icon.png` 180×180):
+  a torre Archer sobre a grama do jogo, montados pixel a pixel a partir dos sprites originais.
 
 ## Créditos e licenças
 
