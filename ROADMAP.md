@@ -2,7 +2,7 @@
 
 > **Documento de execução para um agente de programação (Codex ou equivalente).**
 >
-> **Status:** Etapas 01–05 concluídas; próxima: Etapa 06.
+> **Status:** Etapas 01–06 concluídas; próxima: Etapa 07.
 > **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + React + Canvas 2D.
 > **Fonte:** [Fredoka — Google Fonts](https://fonts.google.com/specimen/Fredoka), via `next/font/google`.
 > **Plataformas:** navegador desktop e mobile, com interação por mouse, toque e teclado onde fizer sentido.
@@ -911,28 +911,79 @@ PRÓXIMA ETAPA:
 
 **Tarefas**
 
-- [ ] Implementar configuração tipada das torres com nome, custo, sprite, dano, alcance e velocidade de ataque.
-- [ ] Implementar `PlacementSystem` e ocupação da grade.
-- [ ] Fazer os três cards de torre selecionarem o tipo a construir.
-- [ ] Renderizar prévia da torre selecionada, marcação de posição válida/inválida e círculo de alcance.
-- [ ] Construir ao clicar/tocar em célula válida; deduzir custo atomicamente da engine.
-- [ ] Impedir construção no caminho, na área do castelo, sobre outra torre, em decoração bloqueada e sem moedas suficientes.
-- [ ] Permitir cancelar modo de construção ou trocá-lo por outra torre.
-- [ ] Clicar/tocar em torre existente seleciona-a em vez de criar outra.
-- [ ] Integrar HUD de moedas à economia real; não manter valores duplicados em React.
-- [ ] Mostrar feedback textual quando a construção for inválida.
-- [ ] Criar testes para custos, ocupação, construção inválida e seleção.
+- [x] Implementar configuração tipada das torres com nome, custo, sprite, dano, alcance e velocidade de ataque.
+- [x] Implementar `PlacementSystem` e ocupação da grade.
+- [x] Fazer os três cards de torre selecionarem o tipo a construir.
+- [x] Renderizar prévia da torre selecionada, marcação de posição válida/inválida e círculo de alcance.
+- [x] Construir ao clicar/tocar em célula válida; deduzir custo atomicamente da engine.
+- [x] Impedir construção no caminho, na área do castelo, sobre outra torre, em decoração bloqueada e sem moedas suficientes.
+- [x] Permitir cancelar modo de construção ou trocá-lo por outra torre.
+- [x] Clicar/tocar em torre existente seleciona-a em vez de criar outra.
+- [x] Integrar HUD de moedas à economia real; não manter valores duplicados em React.
+- [x] Mostrar feedback textual quando a construção for inválida.
+- [x] Criar testes para custos, ocupação, construção inválida e seleção.
 
 **Aceite**
 
-- [ ] Archer, Cannon e Ice Wizard aparecem com seus **sprites reais**, ancorados ao tile.
-- [ ] Nenhum toque pode construir sobre caminho/castelo/torre existente.
-- [ ] Ouro diminui exatamente uma vez após uma construção válida.
-- [ ] Clique/touch inválido não altera ouro nem cria unidade.
-- [ ] Construção e seleção funcionam em desktop e mobile, inclusive após `resize`.
-- [ ] Testes, lint e build passam.
+- [x] Archer, Cannon e Ice Wizard aparecem com seus **sprites reais**, ancorados ao tile.
+- [x] Nenhum toque pode construir sobre caminho/castelo/torre existente.
+- [x] Ouro diminui exatamente uma vez após uma construção válida.
+- [x] Clique/touch inválido não altera ouro nem cria unidade.
+- [x] Construção e seleção funcionam em desktop e mobile, inclusive após `resize`.
+- [x] Testes, lint e build passam.
 
 **Dependência:** Etapa 05.
+
+```text
+ETAPA CONCLUÍDA: 06 — Construção, seleção e economia
+IMPLEMENTADO:
+- `data/towers.ts`: nome, custo, sprite, dano, intervalo e alcance (§6.1); efeitos especiais na Etapa 07.
+- `PlacementSystem.checkPlacement` (puro): fora do mapa, estrada, castelo, decoração, ocupada, ouro,
+  pausa e fim de partida, cada um com motivo em texto. A engine usa a mesma função para a prévia e
+  para a construção.
+- Engine: torres + ocupação (`cellKey` → torre), `selectBuildType`, `placeTower`, `selectTower`,
+  `getTowers`, `getTowerAt`, `checkPlacement`; `placeTower` valida tudo antes de mudar o estado e
+  então desconta o ouro, cria a torre e ocupa a célula no mesmo passo. Construção liberada em
+  preparação e durante a onda; bloqueada em pausa e após vitória/derrota. Snapshot com
+  `selectedBuildType`, `selectedTowerId` e `selectedTower` (resumo). `restart` limpa tudo.
+- Interação: cartão alterna o modo de construção (mesmo cartão cancela, outro troca); botão
+  "Cancelar" e Esc saem do modo/seleção. Toque no mapa: torre existente → seleciona (nunca constrói
+  por cima); modo de construção → constrói ou explica o motivo; casa vazia → limpa a seleção.
+  Construção válida mostra "X construída por N moedas.". Ouro do HUD vem só do snapshot.
+- Toque vs. rolagem: o canvas só aciona em pointerup a até 10 px do pointerdown; arrasto ou
+  `pointercancel` (rolagem do navegador) não constrói. `touch-action: manipulation` mantém a rolagem.
+- Renderer: torres ancoradas na base da célula e centradas (16–18 px, sem esticar); torres,
+  inimigos e castelo ordenados pela base (profundidade). Prévia: célula verde ou vermelha (com ✗,
+  para não depender só da cor), círculo de alcance e torre translúcida; torre selecionada com
+  moldura e alcance dourados. No toque, a prévia some ao trocar de modo (sem "hover" fantasma).
+- `TowerDetails`: sprite, nome, nível e botão para desmarcar (atributos, melhoria e venda na Etapa 08).
+- Barra lateral no desktop usa escala 2× nos cartões e no detalhe, e a dica fica só para leitores de
+  tela, para caber em 1366×768 sem rolagem.
+ARQUIVOS PRINCIPAIS:
+- src/game/systems/PlacementSystem.ts, src/game/entities/Tower.ts, src/game/data/towers.ts
+- src/game/engine/GameEngine.ts, GameRenderer.ts, src/game/types/game.ts, entities.ts
+- src/components/game/GameCanvas.tsx, TowerSelector.tsx, TowerDetails.tsx,
+  src/components/layout/GameShell.tsx
+- src/tests/unit/placement.test.ts
+VALIDAÇÃO:
+- npm test: 35/35 (inclui T01–T04 do §8.2, todos os bloqueios, saldo nunca negativo, IDs únicos,
+  troca/cancelamento do modo, seleção e reinício).
+- npm run lint, npm run typecheck, npm run build: ok.
+- Edge headless (CDP, `next start`):
+  - Desktop (mouse): estrada/castelo/decoração recusados com motivo e ouro inalterado; Archer 150→100;
+    clicar na torre com Cannon ativo seleciona a Archer sem gastar; Esc e casa vazia limpam a seleção;
+    Cannon 100→10; Ice Wizard sem ouro recusado com motivo.
+  - Mobile 390×844 (toque): arrastar no mapa não constrói; toque constrói (150→100); tocar de novo
+    seleciona a mesma torre. Girando para 844×390: Ice Wizard construída e selecionada na célula tocada;
+    toque no canto (árvore) recusado.
+  - Layout 390×844, 768×1024 e 1366×768 sem overflow, controles ≥ 44 px, barra lateral sem rolagem
+    (também com torre selecionada); sem erros de console.
+PENDÊNCIAS / RISCOS:
+- Torres ainda não atacam (Etapa 07); atributos, melhoria e venda no painel na Etapa 08.
+- A "Cancelar" do seletor e o "✗" do detalhe desfazem a seleção; não há confirmação (não gastam nada).
+PRÓXIMA ETAPA:
+- Etapa 07 — Combate, projéteis e efeitos das três torres.
+```
 
 ---
 
@@ -1258,12 +1309,12 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 03 — HUD responsivo | Concluída | GameShell, HUD, seletor, detalhes, controles desativados com motivo, canvas responsivo + ponteiro, loader |
 | 04 — Canvas e mapa | Concluída | Atlas de estrada por conexões, camada estática, castelo animado, caminho ajustado (col. 15 → portão em 18,7) |
 | 05 — Engine e movimento | Concluída | Engine passo fixo, onda 1 de teste, pausa/auto-pausa, laço único, Vitest 20 testes |
-| 06 — Construção e economia | Pendente | — |
+| 06 — Construção e economia | Concluída | PlacementSystem, construção atômica, prévia válida/inválida, toque ≠ rolagem, seleção, 35 testes |
 | 07 — Combate | Pendente | — |
 | 08 — Upgrades e venda | Pendente | — |
 | 09 — Ondas e chefe | Pendente | — |
 | 10 — Mobile e controles | Pendente | — |
 | 11 — Persistência e entrega | Pendente | — |
 
-**Ponto de retomada atual:** Etapa 06 — Construção, seleção e economia.
+**Ponto de retomada atual:** Etapa 07 — Combate, projéteis e efeitos das três torres.
 

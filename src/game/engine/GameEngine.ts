@@ -1,12 +1,21 @@
 import { INITIAL_GOLD, INITIAL_LIVES, TOTAL_WAVES } from "@/game/config/balance";
 import { MAX_FRAME_DELTA, MAX_STEPS_PER_FRAME, SIM_STEP } from "@/game/config/constants";
 import { ENEMIES } from "@/game/data/enemies";
+import { TOWERS } from "@/game/data/towers";
 import { WAVES, type WaveDefinition } from "@/game/data/waves";
 import { advanceEnemy, createEnemy } from "@/game/entities/Enemy";
+import { createTower } from "@/game/entities/Tower";
 import type { MapLayout } from "@/game/systems/MapLayout";
 import { createWorldPath, type WorldPath } from "@/game/systems/PathSystem";
-import type { Enemy, EnemyType } from "@/game/types/entities";
-import type { GamePhase, GameSnapshot, SpeedMultiplier } from "@/game/types/game";
+import { cellKey, checkPlacement, type PlacementCheck } from "@/game/systems/PlacementSystem";
+import type { Enemy, EnemyType, Tower } from "@/game/types/entities";
+import type {
+  GamePhase,
+  GameSnapshot,
+  GridPosition,
+  SpeedMultiplier,
+  TowerType,
+} from "@/game/types/game";
 
 /** Resultado estruturado de um comando: a engine valida tudo, não só a interface. */
 export type CommandResult = { ok: true } | { ok: false; reason: string };
@@ -27,6 +36,7 @@ const fail = (reason: string): CommandResult => ({ ok: false, reason });
  */
 export class GameEngine {
   readonly path: WorldPath;
+  private readonly layout: MapLayout;
   private readonly waves: readonly WaveDefinition[];
 
   private phase: GamePhase = "preparing";
@@ -41,11 +51,19 @@ export class GameEngine {
   private nextEnemyId = 1;
   private accumulator = 0;
 
+  private towers: Tower[] = [];
+  /** Ocupação da grade: `cellKey` → torre. */
+  private occupancy = new Map<string, Tower>();
+  private nextTowerId = 1;
+  private selectedBuildType: TowerType | null = null;
+  private selectedTowerId: string | null = null;
+
   private snapshot: GameSnapshot;
   private readonly listeners = new Set<() => void>();
 
   constructor({ layout, waves = WAVES }: EngineOptions) {
     this.path = createWorldPath(layout.pathCells);
+    this.layout = layout;
     this.waves = waves;
     this.snapshot = this.buildSnapshot();
   }
@@ -63,6 +81,30 @@ export class GameEngine {
   /** Inimigos ativos, somente para leitura (renderer). */
   getEnemies(): readonly Enemy[] {
     return this.enemies;
+  }
+
+  /** Torres construídas, somente para leitura (renderer). */
+  getTowers(): readonly Tower[] {
+    return this.towers;
+  }
+
+  getTowerAt(cell: GridPosition): Tower | null {
+    return this.occupancy.get(cellKey(cell)) ?? null;
+  }
+
+  /** Consulta se a torre pode ser construída na célula agora (prévia), sem alterar estado. */
+  checkPlacement(type: TowerType, cell: GridPosition): PlacementCheck {
+    return checkPlacement(
+      {
+        cells: this.layout.cells,
+        occupied: this.occupancy,
+        gold: this.gold,
+        phase: this.phase,
+        paused: this.paused,
+      },
+      type,
+      cell,
+    );
   }
 
   // --- Tempo ---------------------------------------------------------------------------------
@@ -154,6 +196,53 @@ export class GameEngine {
     return OK;
   }
 
+  /** Entra no modo de construção do tipo (ou sai dele com `null`); desmarca a torre selecionada. */
+  selectBuildType(type: TowerType | null): CommandResult {
+    if (type !== null && !(type in TOWERS)) return fail("Torre desconhecida.");
+    if (type !== null && (this.phase === "victory" || this.phase === "defeat")) {
+      return fail("A partida terminou: não é possível construir.");
+    }
+    if (this.selectedBuildType === type && this.selectedTowerId === null) return OK;
+
+    this.selectedBuildType = type;
+    this.selectedTowerId = null;
+    this.publish();
+    return OK;
+  }
+
+  /**
+   * Constrói a torre do modo de construção atual na célula. Valida tudo antes de mudar
+   * qualquer coisa; ouro e ocupação mudam juntos, no mesmo passo. Sai do modo de construção.
+   */
+  placeTower(cell: GridPosition): CommandResult {
+    const type = this.selectedBuildType;
+    if (!type) return fail("Escolha uma torre para construir.");
+
+    const check = this.checkPlacement(type, cell);
+    if (!check.ok) return fail(check.reason);
+
+    const tower = createTower(`tower-${this.nextTowerId++}`, type, cell);
+    this.gold -= TOWERS[type].cost;
+    this.towers = [...this.towers, tower];
+    this.occupancy.set(cellKey(cell), tower);
+    this.selectedBuildType = null;
+    this.publish();
+    return OK;
+  }
+
+  /** Seleciona uma torre construída (ou limpa a seleção com `null`); sai do modo de construção. */
+  selectTower(id: string | null): CommandResult {
+    if (id !== null && !this.towers.some((tower) => tower.id === id)) {
+      return fail("Torre não encontrada.");
+    }
+    if (this.selectedTowerId === id && this.selectedBuildType === null) return OK;
+
+    this.selectedTowerId = id;
+    this.selectedBuildType = null;
+    this.publish();
+    return OK;
+  }
+
   pause(): CommandResult {
     if (this.phase === "victory" || this.phase === "defeat") return fail("A partida terminou.");
     if (this.paused) return fail("O jogo já está pausado.");
@@ -183,6 +272,10 @@ export class GameEngine {
     this.spawnQueue = [];
     this.waveTime = 0;
     this.accumulator = 0;
+    this.towers = [];
+    this.occupancy = new Map();
+    this.selectedBuildType = null;
+    this.selectedTowerId = null;
     this.publish();
     return OK;
   }
@@ -190,6 +283,10 @@ export class GameEngine {
   // --- Interno -------------------------------------------------------------------------------
 
   private buildSnapshot(): GameSnapshot {
+    const selected = this.selectedTowerId
+      ? this.towers.find((tower) => tower.id === this.selectedTowerId)
+      : undefined;
+
     return {
       phase: this.phase,
       paused: this.paused,
@@ -200,8 +297,11 @@ export class GameEngine {
       totalWaves: TOTAL_WAVES,
       activeEnemies: this.enemies.length,
       pendingEnemies: this.spawnQueue.length,
-      selectedTowerId: null,
-      selectedBuildType: null,
+      selectedTowerId: selected?.id ?? null,
+      selectedTower: selected
+        ? { id: selected.id, type: selected.type, level: selected.level, col: selected.col, row: selected.row }
+        : null,
+      selectedBuildType: this.selectedBuildType,
     };
   }
 

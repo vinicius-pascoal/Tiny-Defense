@@ -7,6 +7,15 @@ export type SpeedMultiplier = 1 | 2;
 export type GridPosition = { col: number; row: number };
 export type Vector2 = { x: number; y: number };
 
+/** Resumo da torre selecionada, para o painel de detalhes. */
+export type SelectedTowerSummary = Readonly<{
+  id: string;
+  type: TowerType;
+  level: number;
+  col: number;
+  row: number;
+}>;
+
 /** Retrato imutável do estado da partida, lido pelo HUD e pelos painéis React. */
 export type GameSnapshot = Readonly<{
   phase: GamePhase;
@@ -19,5 +28,6 @@ export type GameSnapshot = Readonly<{
   activeEnemies: number;
   pendingEnemies: number;
   selectedTowerId: string | null;
+  selectedTower: SelectedTowerSummary | null;
   selectedBuildType: TowerType | null;
 }>;

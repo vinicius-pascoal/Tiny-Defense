@@ -1,4 +1,14 @@
-import type { Vector2 } from "./game";
+import type { TowerType, Vector2 } from "./game";
+
+export type Tower = {
+  readonly id: string;
+  readonly type: TowerType;
+  readonly col: number;
+  readonly row: number;
+  level: number;
+  /** Total já gasto na torre (construção + melhorias), base do reembolso na venda. */
+  invested: number;
+};
 
 /** Inimigos disponíveis. Goblin, Skeleton, Big Slime e King Slime entram na Etapa 09. */
 export type EnemyType = "normalSlime";

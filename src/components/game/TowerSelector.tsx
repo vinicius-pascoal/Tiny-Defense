@@ -1,3 +1,4 @@
+import { PixelButton } from "@/components/ui/PixelButton";
 import { PixelIcon } from "@/components/ui/PixelIcon";
 import { PixelPanel, pixelPanelStyle } from "@/components/ui/PixelPanel";
 import { PixelSprite } from "@/components/ui/PixelSprite";
@@ -7,22 +8,33 @@ import { cn } from "@/lib/cn";
 
 type TowerSelectorProps = {
   snapshot: GameSnapshot;
-  /** Seleciona o tipo a construir. Sem ele, a construção ainda não está disponível. */
+  /** Alterna o tipo a construir. Sem ele (mapa carregando), os cartões ficam desativados. */
   onSelect?: (type: TowerType) => void;
+  /** Sai do modo de construção. */
+  onCancel: () => void;
   /** Recebe o motivo quando o jogador toca numa torre que não pode ser escolhida. */
   onUnavailable: (reason: string) => void;
 };
 
 /** Cartões das torres construíveis, com custo e disponibilidade conforme o ouro atual. */
-export function TowerSelector({ snapshot, onSelect, onUnavailable }: TowerSelectorProps) {
+export function TowerSelector({ snapshot, onSelect, onCancel, onUnavailable }: TowerSelectorProps) {
   const buildAllowed = snapshot.phase === "preparing" || snapshot.phase === "running";
+  const building = snapshot.selectedBuildType ? TOWERS[snapshot.selectedBuildType] : null;
 
   return (
     <PixelPanel as="section" skin="paper" aria-labelledby="tower-selector-title" className="p-2 sm:p-3">
-      <h2 id="tower-selector-title" className="mb-2 text-xl font-bold">
-        Torres
-      </h2>
-      <ul className="grid grid-cols-3 gap-1.5 sm:gap-2">
+      <div className="mb-2 flex min-h-touch items-center justify-between gap-2">
+        <h2 id="tower-selector-title" className="text-xl font-bold">
+          Torres
+        </h2>
+        {building && (
+          <PixelButton icon="cross" onClick={onCancel} className="text-base">
+            Cancelar
+          </PixelButton>
+        )}
+      </div>
+      {/* No desktop, a barra lateral usa escala 2× (ainda inteira) para caber sem rolagem. */}
+      <ul className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:[--px:2px]">
         {TOWER_ORDER.map((type) => {
           const tower = TOWERS[type];
           const missingGold = Math.max(tower.cost - snapshot.gold, 0);
@@ -31,7 +43,7 @@ export function TowerSelector({ snapshot, onSelect, onUnavailable }: TowerSelect
             : missingGold > 0
               ? `Moedas insuficientes: faltam ${missingGold} para ${tower.name}.`
               : !onSelect
-                ? "A construção de torres ainda não está disponível."
+                ? "Aguarde o mapa ficar pronto."
                 : null;
 
           return (
@@ -48,6 +60,11 @@ export function TowerSelector({ snapshot, onSelect, onUnavailable }: TowerSelect
           );
         })}
       </ul>
+      <p aria-live="polite" className="mt-2 text-sm leading-snug text-ink-700 lg:sr-only">
+        {building
+          ? `Toque numa casa livre do mapa para construir a ${building.name}.`
+          : "Escolha uma torre e toque numa casa livre do mapa."}
+      </p>
     </PixelPanel>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { FeedbackToast } from "@/components/game/FeedbackToast";
 import { GameCanvas } from "@/components/game/GameCanvas";
 import { GameHUD } from "@/components/game/GameHUD";
@@ -10,9 +11,11 @@ import { TowerSelector } from "@/components/game/TowerSelector";
 import { WaveControls } from "@/components/game/WaveControls";
 import { PixelPanel } from "@/components/ui/PixelPanel";
 import { LEVEL_1 } from "@/game/data/levels";
+import { TOWERS } from "@/game/data/towers";
 import type { CommandResult } from "@/game/engine/GameEngine";
 import { getLevelSprites } from "@/game/engine/GameRenderer";
 import { createMapLayout } from "@/game/systems/MapLayout";
+import type { GridPosition, TowerType } from "@/game/types/game";
 import { useFeedback } from "@/hooks/useFeedback";
 import { useGameController } from "@/hooks/useGameController";
 import { useSpriteLoader } from "@/hooks/useSpriteLoader";
@@ -41,6 +44,44 @@ export function GameShell() {
   };
   const togglePause = () => run(() => (snapshot.paused ? engine.resume() : engine.pause()));
 
+  // Tocar no mesmo cartão sai do modo de construção; outro cartão troca o tipo.
+  const toggleBuildType = (type: TowerType) =>
+    run(() => engine.selectBuildType(engine.getSnapshot().selectedBuildType === type ? null : type));
+  const cancelSelection = () => {
+    engine.selectBuildType(null);
+    engine.selectTower(null);
+  };
+
+  /**
+   * Toque no mapa: torre existente → seleciona (nunca constrói por cima); modo de construção →
+   * tenta construir; casa vazia fora do modo → limpa a seleção.
+   */
+  const handleCellTap = (cell: GridPosition) => {
+    const tower = engine.getTowerAt(cell);
+    if (tower) return run(() => engine.selectTower(tower.id));
+
+    const buildType = engine.getSnapshot().selectedBuildType;
+    if (!buildType) return run(() => engine.selectTower(null));
+
+    const result = engine.placeTower(cell);
+    if (result.ok) notify(`${TOWERS[buildType].name} construída por ${TOWERS[buildType].cost} moedas.`);
+    else warn(result.reason);
+  };
+
+  // Esc cancela o modo de construção ou a seleção.
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      const { selectedBuildType, selectedTowerId } = engine.getSnapshot();
+      if (selectedBuildType || selectedTowerId) {
+        engine.selectBuildType(null);
+        engine.selectTower(null);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [engine]);
+
   return (
     <div className="flex min-h-dvh flex-col lg:h-dvh">
       <GameHUD snapshot={snapshot} />
@@ -53,6 +94,7 @@ export function GameShell() {
               engine={engine}
               level={LEVEL}
               layout={LAYOUT}
+              onCellTap={handleCellTap}
             />
             {!ready && <SceneLoading state={loadState} onRetry={retry} />}
             {ready && snapshot.paused && <PauseOverlay onResume={togglePause} />}
@@ -71,8 +113,13 @@ export function GameShell() {
             onTogglePause={ready ? togglePause : undefined}
             onUnavailable={warn}
           />
-          <TowerSelector snapshot={snapshot} onUnavailable={warn} />
-          <TowerDetails snapshot={snapshot} />
+          <TowerSelector
+            snapshot={snapshot}
+            onSelect={ready ? toggleBuildType : undefined}
+            onCancel={cancelSelection}
+            onUnavailable={warn}
+          />
+          <TowerDetails snapshot={snapshot} onDeselect={cancelSelection} />
         </aside>
       </div>
     </div>
