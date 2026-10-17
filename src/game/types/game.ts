@@ -7,13 +7,27 @@ export type SpeedMultiplier = 1 | 2;
 export type GridPosition = { col: number; row: number };
 export type Vector2 = { x: number; y: number };
 
-/** Resumo da torre selecionada, para o painel de detalhes. */
+export type TowerStatsSummary = Readonly<{
+  damage: number;
+  attackInterval: number;
+  range: number;
+}>;
+
+/** Resumo da torre selecionada, para o painel de detalhes (valores calculados pela engine). */
 export type SelectedTowerSummary = Readonly<{
   id: string;
   type: TowerType;
   level: number;
+  maxLevel: number;
   col: number;
   row: number;
+  invested: number;
+  stats: TowerStatsSummary;
+  /** Atributos no próximo nível; `null` no nível máximo. */
+  nextStats: TowerStatsSummary | null;
+  /** Custo da próxima melhoria; `null` no nível máximo. */
+  upgradeCost: number | null;
+  sellRefund: number;
 }>;
 
 /** Retrato imutável do estado da partida, lido pelo HUD e pelos painéis React. */

@@ -2,6 +2,7 @@ import { TILE_SIZE } from "@/game/config/constants";
 import { TOWERS } from "@/game/data/towers";
 import type { Enemy, Projectile, Tower, VisualEffect } from "@/game/types/entities";
 import type { Vector2 } from "@/game/types/game";
+import { getTowerStats } from "./EconomySystem";
 
 /** Ganchos da engine: o sistema decide o combate, a engine guarda ouro e efeitos. */
 export type CombatHooks = {
@@ -21,7 +22,7 @@ const distanceSq = (a: Vector2, b: Vector2) => (a.x - b.x) ** 2 + (a.y - b.y) **
 /** Inimigo vivo e dentro do alcance mais avançado no caminho (ROADMAP §6.1), ou `null`. */
 export function selectTarget(tower: Tower, enemies: readonly Enemy[]): Enemy | null {
   const center = towerCenter(tower);
-  const rangeSq = TOWERS[tower.type].range ** 2;
+  const rangeSq = getTowerStats(tower.type, tower.level).range ** 2;
   let best: Enemy | null = null;
   for (const enemy of enemies) {
     if (enemy.state !== "alive" || distanceSq(center, enemy.position) > rangeSq) continue;
@@ -61,6 +62,7 @@ export function updateTowers(
     if (!target) continue; // pronta: dispara assim que alguém entrar no alcance
 
     const definition = TOWERS[tower.type];
+    const stats = getTowerStats(tower.type, tower.level);
     const origin = {
       x: (tower.col + 0.5) * TILE_SIZE,
       y: (tower.row + 1) * TILE_SIZE - definition.muzzleHeight,
@@ -68,13 +70,13 @@ export function updateTowers(
     out.push({
       id: hooks.nextProjectileId(),
       towerType: tower.type,
-      damage: definition.damage,
+      damage: stats.damage,
       position: origin,
       target,
       destination: { ...target.position },
       angle: Math.atan2(target.position.y - origin.y, target.position.x - origin.x),
     });
-    tower.cooldown = definition.attackInterval;
+    tower.cooldown = stats.attackInterval;
   }
 }
 

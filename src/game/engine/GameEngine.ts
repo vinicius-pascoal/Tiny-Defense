@@ -1,4 +1,4 @@
-import { INITIAL_GOLD, INITIAL_LIVES, TOTAL_WAVES } from "@/game/config/balance";
+import { INITIAL_GOLD, INITIAL_LIVES, MAX_TOWER_LEVEL, TOTAL_WAVES } from "@/game/config/balance";
 import { MAX_FRAME_DELTA, MAX_STEPS_PER_FRAME, SIM_STEP } from "@/game/config/constants";
 import { ENEMIES } from "@/game/data/enemies";
 import { TOWERS } from "@/game/data/towers";
@@ -6,6 +6,7 @@ import { WAVES, type WaveDefinition } from "@/game/data/waves";
 import { advanceEnemy, createEnemy } from "@/game/entities/Enemy";
 import { createTower } from "@/game/entities/Tower";
 import { updateProjectiles, updateTowers, type CombatHooks } from "@/game/systems/CombatSystem";
+import { getSellRefund, getTowerStats, getUpgradeCost } from "@/game/systems/EconomySystem";
 import type { MapLayout } from "@/game/systems/MapLayout";
 import { createWorldPath, type WorldPath } from "@/game/systems/PathSystem";
 import { cellKey, checkPlacement, type PlacementCheck } from "@/game/systems/PlacementSystem";
@@ -272,6 +273,42 @@ export class GameEngine {
     return OK;
   }
 
+  /** Sobe a torre um nível, gastando o custo uma única vez. Bloqueado em pausa e após o fim. */
+  upgradeTower(id: string): CommandResult {
+    const tower = this.towers.find((candidate) => candidate.id === id);
+    if (!tower) return fail("Torre não encontrada.");
+    const blocked = this.towerActionBlock();
+    if (blocked) return fail(blocked);
+
+    const cost = getUpgradeCost(tower.type, tower.level);
+    if (cost === null || tower.level >= MAX_TOWER_LEVEL) return fail("Essa torre já está no nível máximo.");
+    if (this.gold < cost) return fail(`Moedas insuficientes: faltam ${cost - this.gold} para melhorar.`);
+
+    this.gold -= cost;
+    tower.level += 1;
+    tower.invested += cost;
+    this.publish();
+    return OK;
+  }
+
+  /**
+   * Vende a torre: devolve 60% do total investido, remove-a, libera a célula e desmarca a seleção.
+   * Uma torre vendida deixa de existir, então vendê-la de novo falha.
+   */
+  sellTower(id: string): CommandResult {
+    const tower = this.towers.find((candidate) => candidate.id === id);
+    if (!tower) return fail("Torre não encontrada.");
+    const blocked = this.towerActionBlock();
+    if (blocked) return fail(blocked);
+
+    this.gold += getSellRefund(tower.invested);
+    this.towers = this.towers.filter((candidate) => candidate !== tower);
+    this.occupancy.delete(cellKey(tower));
+    if (this.selectedTowerId === id) this.selectedTowerId = null;
+    this.publish();
+    return OK;
+  }
+
   /** Seleciona uma torre construída (ou limpa a seleção com `null`); sai do modo de construção. */
   selectTower(id: string | null): CommandResult {
     if (id !== null && !this.towers.some((tower) => tower.id === id)) {
@@ -326,6 +363,13 @@ export class GameEngine {
 
   // --- Interno -------------------------------------------------------------------------------
 
+  /** Motivo que impede melhorar/vender agora, ou `null`. */
+  private towerActionBlock(): string | null {
+    if (this.phase === "victory" || this.phase === "defeat") return "A partida terminou.";
+    if (this.paused) return "Retome o jogo para mexer nas torres.";
+    return null;
+  }
+
   private buildSnapshot(): GameSnapshot {
     const selected = this.selectedTowerId
       ? this.towers.find((tower) => tower.id === this.selectedTowerId)
@@ -343,7 +387,20 @@ export class GameEngine {
       pendingEnemies: this.spawnQueue.length,
       selectedTowerId: selected?.id ?? null,
       selectedTower: selected
-        ? { id: selected.id, type: selected.type, level: selected.level, col: selected.col, row: selected.row }
+        ? {
+            id: selected.id,
+            type: selected.type,
+            level: selected.level,
+            maxLevel: MAX_TOWER_LEVEL,
+            col: selected.col,
+            row: selected.row,
+            invested: selected.invested,
+            stats: getTowerStats(selected.type, selected.level),
+            nextStats:
+              selected.level < MAX_TOWER_LEVEL ? getTowerStats(selected.type, selected.level + 1) : null,
+            upgradeCost: getUpgradeCost(selected.type, selected.level),
+            sellRefund: getSellRefund(selected.invested),
+          }
         : null,
       selectedBuildType: this.selectedBuildType,
     };

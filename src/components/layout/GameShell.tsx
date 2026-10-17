@@ -68,6 +68,20 @@ export function GameShell() {
     else warn(result.reason);
   };
 
+  const upgradeTower = (id: string) => {
+    const before = engine.getSnapshot().selectedTower;
+    const result = engine.upgradeTower(id);
+    if (!result.ok) return warn(result.reason);
+    if (before) notify(`${TOWERS[before.type].name} melhorada para o nível ${before.level + 1}.`);
+  };
+
+  const sellTower = (id: string) => {
+    const before = engine.getSnapshot().selectedTower;
+    const result = engine.sellTower(id);
+    if (!result.ok) return warn(result.reason);
+    if (before) notify(`${TOWERS[before.type].name} vendida: +${before.sellRefund} moedas.`);
+  };
+
   // Esc cancela o modo de construção ou a seleção.
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
@@ -113,13 +127,26 @@ export function GameShell() {
             onTogglePause={ready ? togglePause : undefined}
             onUnavailable={warn}
           />
-          <TowerSelector
+          {/*
+            Painel contextual: com uma torre selecionada, os detalhes ocupam o lugar dos cartões
+            (a engine já trata seleção e modo de construção como exclusivos). ✗, Esc ou tocar numa
+            casa vazia trazem os cartões de volta.
+          */}
+          {!snapshot.selectedTower && (
+            <TowerSelector
+              snapshot={snapshot}
+              onSelect={ready ? toggleBuildType : undefined}
+              onCancel={cancelSelection}
+              onUnavailable={warn}
+            />
+          )}
+          <TowerDetails
             snapshot={snapshot}
-            onSelect={ready ? toggleBuildType : undefined}
-            onCancel={cancelSelection}
+            onDeselect={cancelSelection}
+            onUpgrade={upgradeTower}
+            onSell={sellTower}
             onUnavailable={warn}
           />
-          <TowerDetails snapshot={snapshot} onDeselect={cancelSelection} />
         </aside>
       </div>
     </div>

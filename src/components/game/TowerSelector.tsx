@@ -63,7 +63,7 @@ export function TowerSelector({ snapshot, onSelect, onCancel, onUnavailable }: T
       <p aria-live="polite" className="mt-2 text-sm leading-snug text-ink-700 lg:sr-only">
         {building
           ? `Toque numa casa livre do mapa para construir a ${building.name}.`
-          : "Escolha uma torre e toque numa casa livre do mapa."}
+          : "Escolha uma torre e toque numa casa livre do mapa. Toque numa torre construída para melhorar ou vender."}
       </p>
     </PixelPanel>
   );

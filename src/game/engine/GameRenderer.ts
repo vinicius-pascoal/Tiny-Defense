@@ -2,6 +2,7 @@ import { TILE_SIZE, WORLD_HEIGHT, WORLD_WIDTH } from "@/game/config/constants";
 import type { LevelDefinition } from "@/game/data/levels";
 import { ENEMIES } from "@/game/data/enemies";
 import { TOWERS } from "@/game/data/towers";
+import { getTowerStats } from "@/game/systems/EconomySystem";
 import type { MapLayout, PathTile } from "@/game/systems/MapLayout";
 import type { Enemy, Projectile, Tower, VisualEffect } from "@/game/types/entities";
 import type { GridPosition, TowerType } from "@/game/types/game";
@@ -159,7 +160,10 @@ export class GameRenderer {
     const castleFrame = options.reducedMotion ? 0 : timeMs / CASTLE_FRAME_MS;
     for (const item of drawables) {
       if (item.kind === "enemy") this.drawEnemy(item.enemy);
-      else if (item.kind === "tower") this.drawTower(item.tower.type, item.tower);
+      else if (item.kind === "tower") {
+        this.drawTower(item.tower.type, item.tower);
+        this.drawLevelPips(item.tower);
+      }
       else this.drawSprite(castle.sprite, castle.x, castle.y, castleFrame);
     }
 
@@ -302,8 +306,27 @@ export class GameRenderer {
     ctx.strokeRect(x + 0.5, y + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
   }
 
+  /** Nível 2+ ganha pontinhos dourados na base da célula (um por nível). */
+  private drawLevelPips(tower: Tower) {
+    if (tower.level < 2) return;
+    const { ctx } = this;
+    const size = 2;
+    const gap = 1;
+    const width = tower.level * size + (tower.level - 1) * gap;
+    const x0 = Math.round((tower.col + 0.5) * TILE_SIZE - width / 2);
+    const y = (tower.row + 1) * TILE_SIZE - size - 1;
+    for (let i = 0; i < tower.level; i++) {
+      const x = x0 + i * (size + gap);
+      ctx.fillStyle = COLORS.healthBack;
+      ctx.fillRect(x - 0.5, y - 0.5, size + 1, size + 1);
+      ctx.fillStyle = COLORS.selected;
+      ctx.fillRect(x, y, size, size);
+    }
+  }
+
   private drawSelection(tower: Tower) {
-    this.drawRange(tower, TOWERS[tower.type].range, COLORS.selectedRange, COLORS.selected);
+    const { range } = getTowerStats(tower.type, tower.level);
+    this.drawRange(tower, range, COLORS.selectedRange, COLORS.selected);
     const { ctx } = this;
     ctx.strokeStyle = COLORS.selected;
     ctx.lineWidth = 1;

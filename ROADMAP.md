@@ -2,7 +2,7 @@
 
 > **Documento de execução para um agente de programação (Codex ou equivalente).**
 >
-> **Status:** Etapas 01–07 concluídas; próxima: Etapa 08.
+> **Status:** Etapas 01–08 concluídas; próxima: Etapa 09.
 > **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + React + Canvas 2D.
 > **Fonte:** [Fredoka — Google Fonts](https://fonts.google.com/specimen/Fredoka), via `next/font/google`.
 > **Plataformas:** navegador desktop e mobile, com interação por mouse, toque e teclado onde fizer sentido.
@@ -1070,26 +1070,72 @@ PRÓXIMA ETAPA:
 
 **Tarefas**
 
-- [ ] Completar `TowerDetails` com nome, tipo, nível, dano, intervalo, alcance e custo próximo upgrade.
-- [ ] Implementar níveis 1–3, fórmulas de custo e evolução de atributos no motor.
-- [ ] Atualizar atributos e círculo de alcance imediatamente após o upgrade.
-- [ ] Bloquear upgrade sem moedas e quando já está no nível máximo.
-- [ ] Implementar venda com reembolso calculado sobre o gasto histórico.
-- [ ] Ao vender, remover torre da engine, liberar célula e desmarcar seleção com segurança.
-- [ ] Criar confirmação simples de venda **se necessária para evitar toque acidental**, sem tornar o fluxo excessivamente lento.
-- [ ] Impedir venda/upgrade enquanto o jogo estiver pausado ou encerrado.
-- [ ] Criar testes de níveis, custos, reembolso e prevenção de exploração da economia.
+- [x] Completar `TowerDetails` com nome, tipo, nível, dano, intervalo, alcance e custo próximo upgrade.
+- [x] Implementar níveis 1–3, fórmulas de custo e evolução de atributos no motor.
+- [x] Atualizar atributos e círculo de alcance imediatamente após o upgrade.
+- [x] Bloquear upgrade sem moedas e quando já está no nível máximo.
+- [x] Implementar venda com reembolso calculado sobre o gasto histórico.
+- [x] Ao vender, remover torre da engine, liberar célula e desmarcar seleção com segurança.
+- [x] Criar confirmação simples de venda **se necessária para evitar toque acidental**, sem tornar o fluxo excessivamente lento.
+- [x] Impedir venda/upgrade enquanto o jogo estiver pausado ou encerrado.
+- [x] Criar testes de níveis, custos, reembolso e prevenção de exploração da economia.
 
 **Aceite**
 
-- [ ] Upgrade altera efetivamente o desempenho da torre, não apenas o número exibido.
-- [ ] Nível 3 não permite nível 4.
-- [ ] Venda devolve o valor correto, libera a célula e não pode ocorrer duas vezes.
-- [ ] Botões indisponíveis exibem estado visual e justificativa.
-- [ ] Operações mantêm ouro consistente em HUD e engine.
-- [ ] Testes, lint e build passam.
+- [x] Upgrade altera efetivamente o desempenho da torre, não apenas o número exibido.
+- [x] Nível 3 não permite nível 4.
+- [x] Venda devolve o valor correto, libera a célula e não pode ocorrer duas vezes.
+- [x] Botões indisponíveis exibem estado visual e justificativa.
+- [x] Operações mantêm ouro consistente em HUD e engine.
+- [x] Testes, lint e build passam.
 
 **Dependência:** Etapa 07.
+
+```text
+ETAPA CONCLUÍDA: 08 — Melhorias, venda e painel contextual
+IMPLEMENTADO:
+- `balance.ts`: fatores de custo de melhoria [0,75; 1,2], multiplicador de dano 1,4 e +8 de alcance
+  por nível (cadência igual).
+- `EconomySystem` (puro): `getTowerStats(tipo, nível)` (fonte única de dano/intervalo/alcance para
+  combate, painel e renderer; dano arredondado e sempre crescente), `getUpgradeCost` (ceil; `null`
+  no nível 3) e `getSellRefund` (floor de 60% do investido; nunca acima dele, 0 para inválidos).
+- Engine: `upgradeTower` (valida torre, pausa/fim, nível máximo e ouro antes de mudar; gasta uma
+  vez, sobe o nível e soma ao investido) e `sellTower` (devolve o reembolso, remove a torre, libera a
+  célula e desmarca; vender de novo falha porque a torre não existe mais). Snapshot da torre
+  selecionada com atributos atuais e do próximo nível, custo da melhoria e valor de venda.
+- Combate lê `getTowerStats` pelo nível: dano e alcance melhorados valem no próximo disparo.
+- Renderer: círculo de alcance da seleção pelo nível atual; pontinhos dourados na base das torres
+  nível 2 e 3.
+- `TowerDetails`: sprite, nome, nível com estrelas, Dano/Intervalo/Alcance com "→ próximo",
+  "Melhorar (custo)" e "Vender (+reembolso)". Indisponível = visual desativado + motivo em texto
+  ("Faltam N moedas para melhorar.", "Nível máximo atingido.", "Retome o jogo…") e aviso ao tocar.
+  Venda em dois toques: "Vender" vira "Confirmar" por 3 s (evita toque acidental sem lentidão).
+- Painel contextual: com uma torre selecionada, os detalhes ocupam o lugar dos cartões (seleção e
+  construção já eram exclusivas na engine); ✗, Esc ou tocar numa casa vazia trazem os cartões de
+  volta. Assim cabe em 1366×768 sem rolagem e reduz a rolagem no mobile.
+ARQUIVOS PRINCIPAIS:
+- src/game/systems/EconomySystem.ts, src/game/config/balance.ts, src/game/systems/CombatSystem.ts
+- src/game/engine/GameEngine.ts, GameRenderer.ts, src/game/types/game.ts
+- src/components/game/TowerDetails.tsx, TowerSelector.tsx, src/components/layout/GameShell.tsx
+- src/tests/unit/upgrades.test.ts
+VALIDAÇÃO:
+- npm test: 64/64 (novos: atributos por nível, dano crescente e nível limitado, custos 38/60,
+  68/108, 57/90, reembolso floor/limites, melhoria gasta uma vez, T14 nível 3 sem nível 4 nem gasto,
+  sem ouro bloqueia, snapshot atualizado na hora, T13 venda nível 2 = +52 e célula livre, sem venda
+  dupla/inexistente, construir e vender em laço sempre perde ouro, pausa bloqueia, dano e alcance
+  do nível 2 valem no combate, custos/reembolsos inteiros).
+- npm run lint, npm run typecheck, npm run build: ok.
+- Edge headless (CDP, `next start`), desktop 1366×768 (mouse) e mobile 390×844 (toque): Archer
+  150→100, melhoria 100→62→2, "Nível máximo" desativado com motivo e aviso, primeiro toque em
+  Vender só pede confirmação, Confirmar = +88 (floor 0,6 × 148) e painel volta aos cartões, Cannon
+  construída na célula liberada, confirmação expira em 3 s, pausa mostra o motivo; barra lateral sem
+  rolagem com torre selecionada; layout das três viewports sem overflow; sem erros de console.
+PENDÊNCIAS / RISCOS:
+- Com uma torre selecionada, trocar para construir exige fechar os detalhes (✗/Esc/casa vazia).
+- Valores de progressão ainda não balanceados em partida completa (Etapa 11).
+PRÓXIMA ETAPA:
+- Etapa 09 — Ondas, progressão, chefe e fim de jogo.
+```
 
 ---
 
@@ -1356,10 +1402,10 @@ Copie esta instrução quando for iniciar ou retomar o trabalho com o agente:
 | 05 — Engine e movimento | Concluída | Engine passo fixo, onda 1 de teste, pausa/auto-pausa, laço único, Vitest 20 testes |
 | 06 — Construção e economia | Concluída | PlacementSystem, construção atômica, prévia válida/inválida, toque ≠ rolagem, seleção, 35 testes |
 | 07 — Combate | Concluída | CombatSystem puro, projéteis com sprite, área/lentidão, recompensa única, efeitos; 49 testes |
-| 08 — Upgrades e venda | Pendente | — |
+| 08 — Upgrades e venda | Concluída | EconomySystem, níveis 1–3 no combate, venda com confirmação, painel contextual; 64 testes |
 | 09 — Ondas e chefe | Pendente | — |
 | 10 — Mobile e controles | Pendente | — |
 | 11 — Persistência e entrega | Pendente | — |
 
-**Ponto de retomada atual:** Etapa 08 — Melhorias, venda e painel contextual.
+**Ponto de retomada atual:** Etapa 09 — Ondas, progressão, chefe e fim de jogo.
 
