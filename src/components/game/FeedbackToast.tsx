@@ -1,6 +1,9 @@
 import { PixelIcon } from "@/components/ui/PixelIcon";
 import { PixelPanel } from "@/components/ui/PixelPanel";
-import type { FeedbackMessage } from "@/hooks/useFeedback";
+import type { UiIconName } from "@/lib/assets";
+import type { FeedbackMessage, FeedbackTone } from "@/hooks/useFeedback";
+
+const TONE_ICON: Record<FeedbackTone, UiIconName> = { info: "tick", warning: "cross", reward: "coin" };
 
 type FeedbackToastProps = {
   message: FeedbackMessage | null;
@@ -23,7 +26,7 @@ export function FeedbackToast({ message }: FeedbackToastProps) {
           skin="paper"
           className="feedback-toast flex max-w-full items-center gap-2 px-2 py-1 text-sm font-medium leading-snug sm:text-base"
         >
-          <PixelIcon name={message.tone === "warning" ? "cross" : "tick"} />
+          <PixelIcon name={TONE_ICON[message.tone]} />
           {message.text}
         </PixelPanel>
       )}

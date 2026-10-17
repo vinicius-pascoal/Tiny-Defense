@@ -10,19 +10,19 @@ import { getSellRefund, getTowerStats, getUpgradeCost } from "@/game/systems/Eco
 import type { MapLayout } from "@/game/systems/MapLayout";
 import { createWorldPath, type WorldPath } from "@/game/systems/PathSystem";
 import { cellKey, checkPlacement, type PlacementCheck } from "@/game/systems/PlacementSystem";
-import type { Enemy, EnemyType, Projectile, Tower, VisualEffect } from "@/game/types/entities";
+import { getWaveBonus, startWaveRun, takeDueSpawns, type WaveRun } from "@/game/systems/WaveSystem";
+import type { Enemy, Projectile, Tower, VisualEffect } from "@/game/types/entities";
 import type {
   GamePhase,
   GameSnapshot,
   GridPosition,
   SpeedMultiplier,
   TowerType,
+  WaveReward,
 } from "@/game/types/game";
 
 /** Resultado estruturado de um comando: a engine valida tudo, não só a interface. */
 export type CommandResult = { ok: true } | { ok: false; reason: string };
-
-type SpawnEvent = { time: number; enemy: EnemyType };
 
 type EngineOptions = {
   layout: MapLayout;
@@ -48,8 +48,10 @@ export class GameEngine {
   private gold = INITIAL_GOLD;
   private currentWave = 0;
   private enemies: Enemy[] = [];
-  private spawnQueue: SpawnEvent[] = [];
-  private waveTime = 0;
+  /** Onda em andamento (fila de gerações); `null` fora de `running`. */
+  private waveRun: WaveRun | null = null;
+  private waveReward: WaveReward | null = null;
+  private enemiesDefeated = 0;
   private nextEnemyId = 1;
   private accumulator = 0;
 
@@ -69,6 +71,7 @@ export class GameEngine {
   private readonly combatHooks: CombatHooks = {
     onKill: (enemy) => {
       this.gold += ENEMIES[enemy.type].reward;
+      this.enemiesDefeated += 1;
       this.dirty = true;
     },
     onEffect: (effect) => this.effects.push({ ...effect, age: 0 }),
@@ -162,12 +165,13 @@ export class GameEngine {
     if (this.paused || this.phase !== "running") return;
     this.dirty = false;
 
-    // 1. Geração.
-    this.waveTime += dt;
-    while (this.spawnQueue.length > 0 && this.spawnQueue[0].time <= this.waveTime) {
-      const event = this.spawnQueue.shift()!;
-      this.enemies.push(createEnemy(`enemy-${this.nextEnemyId++}`, event.enemy, this.path));
-      this.dirty = true;
+    // 1. Geração pela fila da onda.
+    const run = this.waveRun;
+    if (run) {
+      for (const type of takeDueSpawns(run, dt)) {
+        this.enemies.push(createEnemy(`enemy-${this.nextEnemyId++}`, type, this.path));
+        this.dirty = true;
+      }
     }
 
     // 2. Movimento e escapes. Quem escapa sai da lista antes do combate: não é mais atacado.
@@ -192,21 +196,11 @@ export class GameEngine {
     for (const effect of this.effects) effect.age += dt;
     this.effects = this.effects.filter((effect) => effect.age < effect.duration);
 
-    // 5. Fim de onda ou de partida.
-    if (this.lives <= 0) {
-      // Derrota tem precedência: cancela gerações pendentes e congela a partida.
-      this.phase = "defeat";
-      this.spawnQueue = [];
-      this.projectiles = [];
-      this.dirty = true;
-    } else if (this.spawnQueue.length === 0 && this.enemies.length === 0) {
-      // Só conclui com todos os grupos gerados e o campo vazio (ROADMAP §6.4, regra 4).
-      this.phase = this.currentWave >= TOTAL_WAVES ? "victory" : "preparing";
-      // Sem alvos, projéteis restantes não têm efeito; não ficam parados no ar entre ondas.
-      this.projectiles = [];
-      this.effects = [];
-      this.dirty = true;
-    }
+    // 5. Fim de onda ou de partida, avaliado uma vez por passo, depois de escapes e mortes.
+    // Derrota tem precedência: se o último inimigo morre (mesmo o chefe) no mesmo passo em que
+    // as vidas zeram, a partida é perdida e nenhum bônus é pago.
+    if (this.lives <= 0) this.endMatch("defeat");
+    else if (this.pendingEnemies() === 0 && this.enemies.length === 0) this.completeWave();
 
     if (this.dirty) this.publish();
   }
@@ -222,17 +216,12 @@ export class GameEngine {
     const wave = this.waves[this.currentWave];
     if (!wave) return fail(`A onda ${this.currentWave + 1} ainda não está disponível.`);
 
-    const queue: SpawnEvent[] = [];
-    for (const group of wave.groups) {
-      for (let i = 0; i < group.count; i++) {
-        queue.push({ time: group.delay + i * group.interval, enemy: group.enemy });
-      }
-    }
-    if (queue.length === 0) return fail("A onda está vazia.");
+    const run = startWaveRun(wave);
+    if (run.queue.length === 0) return fail("A onda está vazia.");
 
-    this.spawnQueue = queue.sort((a, b) => a.time - b.time);
+    this.waveRun = run;
+    this.waveReward = null;
     this.currentWave += 1;
-    this.waveTime = 0;
     this.accumulator = 0;
     this.phase = "running";
     this.publish();
@@ -348,8 +337,9 @@ export class GameEngine {
     this.gold = INITIAL_GOLD;
     this.currentWave = 0;
     this.enemies = [];
-    this.spawnQueue = [];
-    this.waveTime = 0;
+    this.waveRun = null;
+    this.waveReward = null;
+    this.enemiesDefeated = 0;
     this.accumulator = 0;
     this.towers = [];
     this.occupancy = new Map();
@@ -362,6 +352,39 @@ export class GameEngine {
   }
 
   // --- Interno -------------------------------------------------------------------------------
+
+  private pendingEnemies(): number {
+    return this.waveRun?.queue.length ?? 0;
+  }
+
+  /**
+   * Onda concluída (fila vazia E campo vazio — ROADMAP §6.4, regra 4). Ondas 1–9 pagam o bônus
+   * uma única vez e voltam à preparação; a última leva à vitória.
+   */
+  private completeWave() {
+    if (this.currentWave >= TOTAL_WAVES) return this.endMatch("victory");
+
+    const bonus = getWaveBonus(this.currentWave);
+    this.gold += bonus;
+    this.waveReward = { wave: this.currentWave, bonus };
+    this.phase = "preparing";
+    this.waveRun = null;
+    // Sem alvos, projéteis restantes não têm efeito; não ficam parados no ar entre ondas.
+    this.projectiles = [];
+    this.effects = [];
+    this.dirty = true;
+  }
+
+  /** Encerra a partida: cancela gerações pendentes, combate e modos de interação. */
+  private endMatch(result: "victory" | "defeat") {
+    this.phase = result;
+    this.waveRun = null;
+    this.projectiles = [];
+    this.effects = [];
+    this.selectedBuildType = null;
+    this.selectedTowerId = null;
+    this.dirty = true;
+  }
 
   /** Motivo que impede melhorar/vender agora, ou `null`. */
   private towerActionBlock(): string | null {
@@ -384,7 +407,9 @@ export class GameEngine {
       currentWave: this.currentWave,
       totalWaves: TOTAL_WAVES,
       activeEnemies: this.enemies.length,
-      pendingEnemies: this.spawnQueue.length,
+      pendingEnemies: this.pendingEnemies(),
+      enemiesDefeated: this.enemiesDefeated,
+      waveReward: this.waveReward,
       selectedTowerId: selected?.id ?? null,
       selectedTower: selected
         ? {

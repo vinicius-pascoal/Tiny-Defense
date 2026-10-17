@@ -1145,18 +1145,18 @@ PRÓXIMA ETAPA:
 
 **Tarefas**
 
-- [ ] Implementar `WaveSystem` por meio da configuração `waves.ts`, com filas de spawn e grupos.
-- [ ] Configurar as 10 ondas previstas na seção 6.3.
-- [ ] Adicionar Goblin, Skeleton e Big Slime usando spritesheets reais e atributos próprios.
-- [ ] Adicionar King Slime como chefe da onda 10.
-- [ ] Fazer o botão **Iniciar onda** funcionar apenas em `preparing` e enquanto houver próxima onda.
-- [ ] Tratar corretamente o intervalo entre spawns: nenhum término antecipado se ainda existem inimigos pendentes.
-- [ ] Adicionar bônus de conclusão, exibindo feedback visual.
-- [ ] Exibir onda atual e quantidade de inimigos ativos/pendentes (se útil para a interface).
-- [ ] Ao zerar vidas: encerrar a simulação em derrota e abrir `GameOverDialog` com reiniciar/voltar ao menu.
-- [ ] Ao limpar a onda 10 com vidas restantes: encerrar em vitória, com mensagem e reinício.
-- [ ] Garantir que morte do chefe, morte dos últimos inimigos e derrota no mesmo frame não gerem estados contraditórios.
-- [ ] Criar testes de transição das 10 ondas, vitória, derrota, bônus e fila vazia.
+- [x] Implementar `WaveSystem` por meio da configuração `waves.ts`, com filas de spawn e grupos.
+- [x] Configurar as 10 ondas previstas na seção 6.3.
+- [x] Adicionar Goblin, Skeleton e Big Slime usando spritesheets reais e atributos próprios.
+- [x] Adicionar King Slime como chefe da onda 10.
+- [x] Fazer o botão **Iniciar onda** funcionar apenas em `preparing` e enquanto houver próxima onda.
+- [x] Tratar corretamente o intervalo entre spawns: nenhum término antecipado se ainda existem inimigos pendentes.
+- [x] Adicionar bônus de conclusão, exibindo feedback visual.
+- [x] Exibir onda atual e quantidade de inimigos ativos/pendentes (se útil para a interface).
+- [x] Ao zerar vidas: encerrar a simulação em derrota e abrir `GameOverDialog` com reiniciar/voltar ao menu.
+- [x] Ao limpar a onda 10 com vidas restantes: encerrar em vitória, com mensagem e reinício.
+- [x] Garantir que morte do chefe, morte dos últimos inimigos e derrota no mesmo frame não gerem estados contraditórios.
+- [x] Criar testes de transição das 10 ondas, vitória, derrota, bônus e fila vazia.
 
 **Aceite**
 

@@ -43,6 +43,7 @@ const COLORS = {
   healthBack: "#2b1d12",
   health: "#b9d97a",
   healthLow: "#c8443a",
+  boss: "#c8443a",
   frost: "rgb(159 216 240 / 0.75)",
 };
 
@@ -223,20 +224,25 @@ export class GameRenderer {
     this.drawSprite(definition.sprite, x, y, frame);
   }
 
-  /** Barra discreta acima do inimigo, só depois de sofrer dano. */
+  /**
+   * Barra discreta acima do inimigo, só depois de sofrer dano. O chefe tem barra sempre visível,
+   * mais larga e mais grossa.
+   */
   private drawHealthBar(enemy: Enemy) {
-    if (enemy.health >= enemy.maxHealth) return;
+    const definition = ENEMIES[enemy.type];
+    if (!definition.boss && enemy.health >= enemy.maxHealth) return;
     const { ctx } = this;
-    const info = getSpriteInfo(ENEMIES[enemy.type].sprite);
-    const width = Math.max(info.frameWidth, 10);
+    const info = getSpriteInfo(definition.sprite);
+    const width = definition.boss ? 22 : Math.max(info.frameWidth, 10);
+    const height = definition.boss ? 2 : 1;
     const x = Math.round(enemy.position.x - width / 2);
-    const y = Math.round(enemy.position.y + 3 - info.frameHeight - 3);
+    const y = Math.round(enemy.position.y + 3 - info.frameHeight - 2 - height);
     const ratio = enemy.health / enemy.maxHealth;
 
     ctx.fillStyle = COLORS.healthBack;
-    ctx.fillRect(x - 0.5, y - 0.5, width + 1, 2);
-    ctx.fillStyle = ratio > 0.35 ? COLORS.health : COLORS.healthLow;
-    ctx.fillRect(x, y, Math.max(width * ratio, 0.5), 1);
+    ctx.fillRect(x - 0.5, y - 0.5, width + 1, height + 1);
+    ctx.fillStyle = definition.boss ? COLORS.boss : ratio > 0.35 ? COLORS.health : COLORS.healthLow;
+    ctx.fillRect(x, y, Math.max(width * ratio, 0.5), height);
   }
 
   private drawProjectile(projectile: Projectile) {

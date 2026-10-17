@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export type FeedbackTone = "info" | "warning";
+export type FeedbackTone = "info" | "warning" | "reward";
 
 export type FeedbackMessage = { id: number; text: string; tone: FeedbackTone };
 

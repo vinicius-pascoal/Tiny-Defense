@@ -30,6 +30,9 @@ export type SelectedTowerSummary = Readonly<{
   sellRefund: number;
 }>;
 
+/** Onda concluída e bônus pago por ela (ondas 1–9; a última termina em vitória). */
+export type WaveReward = Readonly<{ wave: number; bonus: number }>;
+
 /** Retrato imutável do estado da partida, lido pelo HUD e pelos painéis React. */
 export type GameSnapshot = Readonly<{
   phase: GamePhase;
@@ -41,6 +44,10 @@ export type GameSnapshot = Readonly<{
   totalWaves: number;
   activeEnemies: number;
   pendingEnemies: number;
+  /** Inimigos derrotados na partida (resumo do fim de jogo). */
+  enemiesDefeated: number;
+  /** Última onda concluída e seu bônus; some ao iniciar a próxima onda ou reiniciar. */
+  waveReward: WaveReward | null;
   selectedTowerId: string | null;
   selectedTower: SelectedTowerSummary | null;
   selectedBuildType: TowerType | null;

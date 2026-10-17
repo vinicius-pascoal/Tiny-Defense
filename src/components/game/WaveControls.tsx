@@ -18,6 +18,20 @@ const PHASE_TEXT: Record<GamePhase, string> = {
   defeat: "Derrota. O castelo caiu.",
 };
 
+/** Situação da onda em uma frase: bônus recebido, inimigos restantes ou chefe a caminho. */
+function statusText(snapshot: GameSnapshot) {
+  const { phase, paused, currentWave, totalWaves, activeEnemies, pendingEnemies, waveReward } = snapshot;
+  if (paused) return "Jogo pausado.";
+  if (phase === "running") {
+    const remaining = `${activeEnemies} no mapa, ${pendingEnemies} a caminho.`;
+    return currentWave === totalWaves ? `Onda final: o King Slime vem aí! ${remaining}` : `Inimigos: ${remaining}`;
+  }
+  if (phase === "preparing" && waveReward) {
+    return `Onda ${waveReward.wave} concluída: +${waveReward.bonus} moedas de bônus. Prepare a próxima.`;
+  }
+  return PHASE_TEXT[phase];
+}
+
 /** Início de onda, pausa/retomada e velocidade da simulação. */
 export function WaveControls({
   snapshot,
@@ -28,6 +42,7 @@ export function WaveControls({
 }: WaveControlsProps) {
   const { phase, paused, speed, currentWave, totalWaves } = snapshot;
 
+  // Mesmas regras de `engine.startWave`, para explicar o bloqueio; a engine continua validando.
   const startReason =
     phase !== "preparing"
       ? phase === "running"
@@ -35,9 +50,11 @@ export function WaveControls({
         : "A partida terminou."
       : currentWave >= totalWaves
         ? "Não há mais ondas."
-        : !onStartWave
-          ? "Aguarde o mapa ficar pronto."
-          : null;
+        : paused
+          ? "Retome o jogo para iniciar a onda."
+          : !onStartWave
+            ? "Aguarde o mapa ficar pronto."
+            : null;
   const pauseReason = !onTogglePause
     ? "Aguarde o mapa ficar pronto."
     : phase === "victory" || phase === "defeat"
@@ -56,7 +73,7 @@ export function WaveControls({
         <h2 id="wave-controls-title" className="text-xl font-bold">
           Onda {currentWave}/{totalWaves}
         </h2>
-        <p className="leading-snug text-ink-700">{paused ? "Jogo pausado." : PHASE_TEXT[phase]}</p>
+        <p className="leading-snug text-ink-700">{statusText(snapshot)}</p>
       </div>
 
       <div className="flex gap-2">

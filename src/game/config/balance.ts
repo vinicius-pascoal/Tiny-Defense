@@ -5,6 +5,13 @@ export const INITIAL_GOLD = 150;
 export const TOTAL_WAVES = 10;
 export const MAX_TOWER_LEVEL = 3;
 
+/**
+ * Bônus ao concluir uma onda: base + por onda × número da onda (ROADMAP §6.3), pago uma vez.
+ * A última onda termina em vitória e não paga bônus (não haveria onde gastar).
+ */
+export const WAVE_BONUS_BASE = 20;
+export const WAVE_BONUS_PER_WAVE = 5;
+
 /** Fração do total investido devolvida ao vender uma torre (arredondada para baixo). */
 export const SELL_REFUND_RATIO = 0.6;
 

@@ -12,8 +12,8 @@ export type Tower = {
   cooldown: number;
 };
 
-/** Inimigos disponíveis. Goblin, Skeleton, Big Slime e King Slime entram na Etapa 09. */
-export type EnemyType = "normalSlime";
+/** Inimigos do MVP (ROADMAP §6.2); o King Slime é o chefe da onda 10. */
+export type EnemyType = "normalSlime" | "goblin" | "skeleton" | "bigSlime" | "kingSlime";
 
 /** Morto e escapado são estados finais: o inimigo não recebe dano nem causa efeitos depois. */
 export type EnemyState = "alive" | "dead" | "escaped";

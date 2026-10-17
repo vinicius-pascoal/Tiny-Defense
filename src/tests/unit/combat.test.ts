@@ -16,6 +16,7 @@ import {
 } from "@/game/systems/CombatSystem";
 import { createMapLayout } from "@/game/systems/MapLayout";
 import { createWorldPath } from "@/game/systems/PathSystem";
+import { getWaveBonus } from "@/game/systems/WaveSystem";
 import type { Enemy, Projectile } from "@/game/types/entities";
 
 const layout = createMapLayout(LEVEL_1);
@@ -223,9 +224,11 @@ describe("GameEngine — combate integrado", () => {
 
     const s = engine.getSnapshot();
     const escaped = INITIAL_LIVES - s.lives;
-    const killed = (s.gold - (INITIAL_GOLD - TOWERS.archer.cost - TOWERS.cannon.cost)) / ENEMIES.normalSlime.reward;
+    const killed = s.enemiesDefeated;
     expect(s.phase).toBe("preparing");
-    expect(Number.isInteger(killed)).toBe(true);
+    expect(s.gold).toBe(
+      INITIAL_GOLD - TOWERS.archer.cost - TOWERS.cannon.cost + killed * ENEMIES.normalSlime.reward + getWaveBonus(1),
+    );
     expect(killed + escaped).toBe(6);
     expect(killed).toBeGreaterThan(0);
     expect(engine.getProjectiles()).toHaveLength(0);

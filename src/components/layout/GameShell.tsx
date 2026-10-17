@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { FeedbackToast } from "@/components/game/FeedbackToast";
 import { GameCanvas } from "@/components/game/GameCanvas";
 import { GameHUD } from "@/components/game/GameHUD";
+import { GameOverDialog } from "@/components/game/GameOverDialog";
 import { PauseOverlay } from "@/components/game/PauseOverlay";
 import { SceneLoading } from "@/components/game/SceneLoading";
 import { TowerDetails } from "@/components/game/TowerDetails";
@@ -82,6 +83,19 @@ export function GameShell() {
     if (before) notify(`${TOWERS[before.type].name} vendida: +${before.sellRefund} moedas.`);
   };
 
+  const restart = () => run(() => engine.restart());
+
+  // Bônus de fim de onda: aviso no mapa assim que a engine publica a onda concluída.
+  useEffect(() => {
+    let lastReward = engine.getSnapshot().waveReward;
+    return engine.subscribe(() => {
+      const { waveReward } = engine.getSnapshot();
+      if (waveReward === lastReward) return;
+      lastReward = waveReward;
+      if (waveReward) notify(`Onda ${waveReward.wave} concluída! +${waveReward.bonus} moedas de bônus.`, "reward");
+    });
+  }, [engine, notify]);
+
   // Esc cancela o modo de construção ou a seleção.
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
@@ -149,6 +163,8 @@ export function GameShell() {
           />
         </aside>
       </div>
+
+      <GameOverDialog snapshot={snapshot} onRestart={restart} onExit={restart} />
     </div>
   );
 }
